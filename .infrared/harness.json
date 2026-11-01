@@ -1,0 +1,45 @@
+{
+  "harness": 1,
+  "$comment": "The manifest (ADR 0019). Nothing else may hardcode a harness path: resolve one with node .infrared/bin/bb-harness.mjs path <key>. A path left out is not kept in this repo. template is written by bb-harness sync, never by hand.",
+  "product": "spike-rayban",
+  "root": ".infrared",
+  "delivery": {
+    "mode": "trunk"
+  },
+  "paths": {
+    "instructions": "AGENTS.md",
+    "cli": ".infrared/bin/bb-harness.mjs",
+    "mission": ".infrared/MISSION.md",
+    "progress": ".infrared/PROGRESS.md",
+    "decisions": ".infrared/DECISIONS.md",
+    "goldenRules": ".infrared/golden-rules.md",
+    "scripts": ".infrared/scripts",
+    "claudeSettings": ".claude/settings.json",
+    "claudeHooks": ".claude/hooks",
+    "claudeIgnore": ".claude/.gitignore"
+  },
+  "verify": {
+    "all": "make verify",
+    "layers": [
+      {
+        "label": "static",
+        "cmd": "make verify",
+        "repair": "The harness, shellcheck and xcodebuild name the file and line; fix the first error. A package that will not resolve is the network or the git URL rules (README.md, Builds). The glasses themselves are not in the gate: a run on a real pair is a person with the glasses on (README.md, On your iPhone)."
+      }
+    ]
+  },
+  "credentials": [],
+  "template": {
+    "version": "0.3.2",
+    "files": {
+      ".infrared/bin/bb-harness.mjs": "sha256-fd64c0a8a8a6106fd33c3e977588c8fe50f9dfb3f95e02271e20dd168f18bba1",
+      ".infrared/scripts/clean-state-check.sh": "sha256-c605968934a9772324ffc8ccc1cc71ca898d53c7e4b9be6bfa858c7122f34d32",
+      ".infrared/scripts/credentials.mjs": "sha256-d25680fa5f062041ce0b3aa385b9af5e5d354096039c8b7d05c2fd47aa5d6438",
+      ".infrared/scripts/verify-feature.sh": "sha256-964a47e9a1386c2f27424e08e78a7d56b8aa1ae132a975cc0f5ac4935a96d659",
+      ".claude/.gitignore": "sha256-760a59c776e2db61ebc6dee651852745ed4cb62c756f86b27214b48746492b9d",
+      ".claude/hooks/guard.mjs": "sha256-b3e948e61b496a3540cb57ef12db9d255f6c6b5fe3e8dd37352c5f870fd55386",
+      ".claude/hooks/session-start.mjs": "sha256-9b950e57295548d390c7363f0464babaaa3f971e55ef238d02a447973a33436b",
+      ".claude/settings.json": "sha256-a67ebce9cfe44bc147d9aa9a7b74874c81822ee23455c0b73551eea180a810ca"
+    }
+  }
+}

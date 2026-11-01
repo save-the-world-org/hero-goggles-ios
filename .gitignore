@@ -1,0 +1,7 @@
+# Written by XcodeGen from project.yml.
+/RayBanSpike.xcodeproj/
+# Builds, and the screenshots scripts/run-simulator takes.
+/.build/
+# Each person's own Apple Developer team.
+/Config/Signing.local.xcconfig
+.DS_Store

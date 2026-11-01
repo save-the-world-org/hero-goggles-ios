@@ -1,0 +1,8 @@
+// Signing for the Xcode project that project.yml generates. Xcode signs automatically, with each person's own Apple
+// Developer team: copy Signing.example.xcconfig to Signing.local.xcconfig beside it, which git ignores, and set your team
+// there. Without one, builds for the simulators and the generic iOS destination still work; a device needs the team.
+CODE_SIGN_STYLE = Automatic
+DEVELOPMENT_TEAM =
+META_APP_ID =
+CLIENT_TOKEN =
+#include? "Signing.local.xcconfig"

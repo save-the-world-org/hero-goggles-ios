@@ -1,0 +1,6 @@
+# Personal, per machine: never shared. Claude Code writes it when someone
+# answers "don't ask again".
+settings.local.json
+
+# Worktrees Claude Code makes for itself (claude --worktree).
+worktrees/

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Runs the spike on an iOS simulator with Meta's simulated Ray-Ban Display (the toolkit's MockDeviceKit), pressing the
+# button in focus every six seconds, and saves a screenshot of the phone after each press to .build/screens/.
+#   scripts/run-simulator                          the simulator "iPhone 18 Pro"
+#   SIMULATOR="iPhone 17" scripts/run-simulator    another one (xcrun simctl list devices available)
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+simulator=${SIMULATOR:-iPhone 18 Pro}
+xcodegen generate --quiet
+xcodebuild -project RayBanSpike.xcodeproj -scheme RayBanSpike -destination "platform=iOS Simulator,name=$simulator" \
+  -derivedDataPath .build/simulator -quiet build
+app=.build/simulator/Build/Products/Debug-iphonesimulator/RayBanSpike.app
+
+xcrun simctl boot "$simulator" 2>/dev/null || true
+xcrun simctl bootstatus "$simulator" -b >/dev/null
+xcrun simctl install "$simulator" "$app"
+xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
+  -spike.preview YES -spike.autoplay YES >/dev/null
+mkdir -p .build/screens
+for i in 1 2 3 4 5 6 7 8; do
+  sleep 5
+  xcrun simctl io "$simulator" screenshot ".build/screens/screen-$i.png" >/dev/null 2>&1
+  sleep 1
+done
+echo "screenshots in .build/screens/; the app goes on pressing until you quit it (xcrun simctl terminate \"$simulator\" io.darkshift.rayban-spike)"

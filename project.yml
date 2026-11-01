@@ -1,0 +1,55 @@
+# The spike's Xcode project, for XcodeGen (2.46): `xcodegen generate` writes RayBanSpike.xcodeproj, which git ignores.
+# One iPhone app on Meta's Wearables Device Access Toolkit and nothing else, so it builds for the simulators too, where
+# localred's app does not (its neural voice's MLX does not link for the simulator on Xcode 27.2).
+#
+# Signing is automatic, with each person's own team from Config/Signing.local.xcconfig (Config/Signing.xcconfig says
+# how); the simulators and the generic iOS destination need none. README.md says how to run it.
+name: RayBanSpike
+options:
+  bundleIdPrefix: io.darkshift
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    # The toolkit refuses to start without CFBundleShortVersionString.
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+packages:
+  # Meta's Wearables Device Access Toolkit: binary frameworks for iOS (github.com/facebook/meta-wearables-dat-ios).
+  MetaWearablesDAT:
+    url: https://github.com/facebook/meta-wearables-dat-ios
+    exactVersion: 1.0.1
+targets:
+  RayBanSpike:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+    dependencies:
+      # The toolkit, the glasses' display, and simulated glasses for the preview on the phone.
+      - package: MetaWearablesDAT
+        product: MWDATCore
+      - package: MetaWearablesDAT
+        product: MWDATDisplay
+      - package: MetaWearablesDAT
+        product: MWDATMockDevice
+    settings:
+      base:
+        PRODUCT_NAME: RayBanSpike
+        # Merged with the keys generated from the INFOPLIST_KEY_ settings below: the toolkit's keys.
+        INFOPLIST_FILE: Config/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: io.darkshift.rayban-spike
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_CFBundleDisplayName: Ray-Ban spike
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+    scheme: {}

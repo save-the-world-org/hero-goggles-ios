@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Builds the spike signed for your iPhone, installs it there and opens it: the phone plugged in (or paired for wireless
+# debugging), unlocked and trusting this Mac, and your team in Config/Signing.local.xcconfig (Signing.example.xcconfig
+# says how). The first signed build registers the app's identifier, io.darkshift.rayban-spike, with your team.
+#   DEVICE=<identifier> scripts/install-device     the identifier from xcrun devicectl list devices
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+device=${DEVICE:?set DEVICE to your iPhone: xcrun devicectl list devices}
+xcodegen generate --quiet
+xcodebuild -project RayBanSpike.xcodeproj -scheme RayBanSpike -configuration Release -destination "id=$device" \
+  -derivedDataPath .build/device -allowProvisioningUpdates -quiet build
+app=.build/device/Build/Products/Release-iphoneos/RayBanSpike.app
+codesign --verify --deep --strict "$app"
+xcrun devicectl device install app --device "$device" "$app"
+xcrun devicectl device process launch --device "$device" --terminate-existing io.darkshift.rayban-spike

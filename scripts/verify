@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# The spike's gate: the harness, shellcheck on the scripts, the Xcode project from project.yml, and the app built for the
+# iOS Simulator and for a generic iPhone, unsigned. It needs no glasses, no Apple account and no simulator running.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+node .infrared/bin/bb-harness.mjs validate
+shellcheck scripts/*
+xcodegen generate --quiet
+derived=.build/verify
+xcodebuild -project RayBanSpike.xcodeproj -scheme RayBanSpike -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath "$derived" -quiet build
+xcodebuild -project RayBanSpike.xcodeproj -scheme RayBanSpike -destination 'generic/platform=iOS' \
+  -derivedDataPath "$derived" -quiet CODE_SIGNING_ALLOWED=NO build
+echo "verify: ok"

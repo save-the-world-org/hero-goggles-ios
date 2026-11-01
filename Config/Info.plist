@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The app's own Info.plist keys, beside those Xcode generates from project.yml's INFOPLIST_KEY_ settings: what Meta's
+  Wearables Device Access Toolkit needs, as its getting-started guide and its DisplayAccess sample have them at 1.0.1.
+  MetaAppID and ClientToken stay unset: Meta AI's Developer Mode on the glasses stands in for an app registered in Meta's
+  Wearables Developer Center. Set them, and only then, in the git-ignored Config/Signing.local.xcconfig (META_APP_ID,
+  CLIENT_TOKEN), never here.
+-->
+<plist version="1.0">
+<dict>
+	<!-- Meta AI calls the app back on this scheme after a registration; MWDAT > AppLinkURLScheme names it to the toolkit. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.darkshift.rayban-spike</string>
+			</array>
+		</dict>
+	</array>
+	<key>MWDAT</key>
+	<dict>
+		<key>AppLinkURLScheme</key>
+		<string>io.darkshift.rayban-spike://</string>
+		<key>MetaAppID</key>
+		<string>$(META_APP_ID)</string>
+		<key>ClientToken</key>
+		<string>$(CLIENT_TOKEN)</string>
+		<key>TeamID</key>
+		<string>$(DEVELOPMENT_TEAM)</string>
+		<!-- Nothing of how the app uses the glasses goes to Meta's analytics, and no crash of the toolkit's to its reports. -->
+		<key>Analytics</key>
+		<dict>
+			<key>OptOut</key>
+			<true/>
+		</dict>
+		<key>CrashReporting</key>
+		<dict>
+			<key>OptOut</key>
+			<true/>
+		</dict>
+	</dict>
+	<!-- The toolkit's links: Bluetooth LE, Bluetooth Classic (the accessory protocol) and Wi-Fi. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+		<string>external-accessory</string>
+		<string>processing</string>
+	</array>
+	<key>UISupportedExternalAccessoryProtocols</key>
+	<array>
+		<string>com.meta.ar.wearable</string>
+	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>The spike connects to your Meta glasses over Bluetooth, to draw on their display.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>The spike finds your Meta glasses over Wi-Fi, to draw on their display.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_bonjour._tcp</string>
+	</array>
+</dict>
+</plist>
