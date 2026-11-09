@@ -82,7 +82,7 @@ Once registered, the app is listed in Meta AI under Settings, App connections, D
 
 The app finds a UWB beacon over Bluetooth, then measures the way to it with Apple's Nearby Interaction, and says and
 shows it: on the phone, in the glasses' lens, and in their speakers. The beacon is a Qorvo DWM3001CDK board on Qorvo's
-Nearby Interaction firmware (QANI); darkshiftio/beacon-firmware has the board, its firmware and the tools to flash it,
+Nearby Interaction firmware (QANI); save-the-world-org/beacon-firmware has the board, its firmware and the tools to flash it,
 and infrared-docs-internal's `docs/beacons/` the pages for people. The beacon is "Kelsey"; every screen of it is titled
 "Kelsey Finder" (`Seeker.name`).
 

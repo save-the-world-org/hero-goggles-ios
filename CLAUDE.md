@@ -3,7 +3,7 @@
 The Meta Ray-Ban Display spike: an iPhone app on Meta's Wearables Device Access Toolkit 1.0.1 that draws on the
 glasses' display and takes Neural Band presses, with nothing of Infrared in it, and since 2026-11-08 seeks a UWB beacon
 ("Kelsey Finder", `App/Seeker.swift`). Infrared's own use of the glasses is in darkshiftio/localred's iPhone app
-(`app/Mobile/Glasses`, `docs/app.md`, "Glasses"). The beacon's firmware and tools are darkshiftio/beacon-firmware.
+(`app/Mobile/Glasses`, `docs/app.md`, "Glasses"). The beacon's firmware and tools are save-the-world-org/beacon-firmware.
 darkshiftio/workspace's `CLAUDE.md` applies here too.
 
 - **Meta's side is Developer Mode, not an account.** `MetaAppID` and `ClientToken` stay unset (`Config/Info.plist`),

@@ -80,7 +80,7 @@ words heard through the glasses: re-learn the voice with the glasses on.
 ## Seeking a UWB beacon
 
 From 2026-11-07, with a Qorvo DWM3001CDK on Qorvo's Nearby Interaction firmware (QANI, SDK 1.1.1) and an iPhone 17 Pro.
-The beacon's side is darkshiftio/beacon-firmware (`docs/qani.md`).
+The beacon's side is save-the-world-org/beacon-firmware (`docs/qani.md`).
 
 - **The handshake** (read in Qorvo's source, seen): connect over Bluetooth, subscribe to QANI's TX characteristic,
   write `0x0A` to its RX; the beacon answers `0x01` and its accessory configuration data, which makes a
