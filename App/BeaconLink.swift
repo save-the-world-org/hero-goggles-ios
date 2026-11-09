@@ -75,8 +75,10 @@ final class BeaconLink: NSObject {
 
     /// The beacon to take, by its ID: the 8 hex digits of its DEVICEADDR[0], which it advertises inside its name, "Hero
     /// Finder (86E7C53A)" on our firmware and "DWM3001CDK (86E7C53A)" on Qorvo's. The Influence API's `hardwareId` for
-    /// the target (`Seeker.find`). Another beacon is taken only after three seconds without it.
-    @ObservationIgnored var preferred: String?
+    /// the target (`Seeker.find`). Another beacon is taken only after three seconds without it. A change scans again.
+    @ObservationIgnored var preferred: String? {
+        didSet { if preferred != oldValue { retarget() } }
+    }
     @ObservationIgnored private var fallback: (peripheral: CBPeripheral, name: String?, rssi: Int)?
 
     @ObservationIgnored private var central: CBCentralManager?
@@ -136,6 +138,21 @@ final class BeaconLink: NSObject {
     static func beaconID(_ text: String?) -> String? {
         guard let text else { return nil }
         return text.matches(of: /[0-9A-Fa-f]{8}/).last.map { String($0.output).uppercased() }
+    }
+
+    /// The target changed: let go of a beacon that is not the new target's (its disconnect scans again), or start the
+    /// scan afresh.
+    private func retarget() {
+        guard wanted, let central, central.state == .poweredOn else { return }
+        if let peripheral {
+            guard connectedID != preferred else { return }
+            Self.log.info("target changed, letting go of \(self.name ?? "-", privacy: .public)")
+            central.cancelPeripheralConnection(peripheral)
+        } else {
+            fallback = nil
+            central.stopScan()
+            scan()
+        }
     }
 
     private func forget() {
