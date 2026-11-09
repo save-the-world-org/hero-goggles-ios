@@ -18,11 +18,12 @@ struct HeroGogglesApp: App {
     @State private var demo = Demo()
     @State private var seeker = Seeker()
     @State private var influence = InfluenceLink()
+    @State private var share = FrameShare()
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
-            HeroGogglesView(glasses: glasses, demo: demo, seeker: seeker, influence: influence)
+            HeroGogglesView(glasses: glasses, demo: demo, seeker: seeker, influence: influence, share: share)
                 .onOpenURL { glasses.handle($0) }
                 .onChange(of: influence.target, initial: true) { _, target in
                     seeker.find(target?.name, beacon: target?.hardwareID)
@@ -30,12 +31,15 @@ struct HeroGogglesApp: App {
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     // Inactive (a permission prompt, Control Centre) is still in front: only the background stops it.
                     influence.setForeground(phase != .background)
+                    share.setForeground(phase != .background)
                 }
                 .onChange(of: Lens.glance(seeker: seeker, demo: demo), initial: true) { _, glance in
                     glasses.show(glance)
                 }
                 .task {
                     seeker.onReading = { [influence] reading in influence.send(reading) }
+                    share.influence = influence
+                    glasses.onSession = { [share] session in share.use(session) }
                     glasses.onPress = { [demo, seeker] press in
                         Lens.press(press, from: .glasses, seeker: seeker, demo: demo)
                     }

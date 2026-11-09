@@ -61,6 +61,8 @@ final class Glasses {
 
     /// A button pressed on the glasses.
     @ObservationIgnored var onPress: (@MainActor (Press) -> Void)?
+    /// The session on the glasses as it starts, nil as it ends: the camera's to share (`FrameShare`).
+    @ObservationIgnored var onSession: (@MainActor (DeviceSession?) -> Void)?
 
     @ObservationIgnored private var wearables: (any WearablesInterface)?
     @ObservationIgnored private var selector: AutoDeviceSelector?
@@ -288,7 +290,9 @@ final class Glasses {
                 guard let self, self.session === session else { return }
                 Self.log.info("session: \(state.description, privacy: .public)")
                 switch state {
-                case .started: self.addDisplay(to: session)
+                case .started:
+                    self.addDisplay(to: session)
+                    self.onSession?(session)
                 case .paused: self.stage = .paused
                 case .stopped:
                     self.clear()
@@ -380,6 +384,7 @@ final class Glasses {
         session = nil
         sending = false
         stage = .idle
+        onSession?(nil)
     }
 
     // MARK: - The glance
