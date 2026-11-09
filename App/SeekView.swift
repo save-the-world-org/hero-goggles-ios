@@ -5,6 +5,7 @@ import simd
 /// switches for the camera, the voice and the glasses, and what Bluetooth and Nearby Interaction say underneath.
 struct SeekView: View {
     @Bindable var seeker: Seeker
+    @Bindable var influence: InfluenceLink
 
     var body: some View {
         List {
@@ -28,6 +29,7 @@ struct SeekView: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
+                    InfluenceLine(influence: influence)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -42,7 +44,8 @@ struct SeekView: View {
                 Toggle("Say the way", isOn: $seeker.speaks)
                 Toggle("Hot and cold beeps", isOn: $seeker.beeps)
                 Toggle("Show it on the glasses", isOn: $seeker.showsOnGlasses)
-                Toggle("Alert when \(Seeker.name) goes too far", isOn: $seeker.separationAlert)
+                Toggle("Send to Influence", isOn: $influence.enabled)
+                Toggle("Alert when \(seeker.name) goes too far", isOn: $seeker.separationAlert)
                 if seeker.separationAlert {
                     Stepper("Farther than \(Int(seeker.alertBeyond)) m", value: $seeker.alertBeyond, in: 2...50, step: 1)
                 }
@@ -88,7 +91,7 @@ struct SeekView: View {
                 }
             }
         }
-        .navigationTitle(Seeker.title)
+        .navigationTitle(seeker.title)
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -112,5 +115,18 @@ struct SeekView: View {
 
     private func vector(_ value: simd_float3) -> String {
         String(format: "%.2f, %.2f, %.2f", Double(value.x), Double(value.y), Double(value.z))
+    }
+}
+
+/// The Influence API's link in one small line, ticking each second: "Influence: Kunal · sent 3 s ago", or offline.
+struct InfluenceLine: View {
+    let influence: InfluenceLink
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            Text(influence.words(at: context.date))
+                .font(.caption)
+                .foregroundStyle(influence.reachable == false ? Color.red : Color.secondary)
+        }
     }
 }

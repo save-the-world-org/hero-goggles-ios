@@ -66,6 +66,9 @@
 	<string>Your phone's motion tells who moves when the distance grows: the beacon, while you stand still, or you, walking the wrong way.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The camera lets the iPhone work out which way your UWB beacon is (Apple's camera assistance). Nothing is recorded.</string>
+	<!-- The Influence API's live map (App/InfluenceLink.swift): the phone's position with each reading of the beacon. -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The spike sends where you are with each reading of your UWB beacon, to the Influence live map.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>The spike finds your Meta glasses over Wi-Fi, to draw on their display.</string>
 	<key>NSBonjourServices</key>

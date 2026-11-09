@@ -42,9 +42,24 @@ final class Seeker: NSObject {
     /// Closer than this, the seeking is done.
     static let arrived: Float = 0.4
 
-    /// Who the beacon finds, and the title on the glasses and the phone.
-    static let name = "Kelsey"
-    static var title: String { "\(name) Finder" }
+    /// Who the beacon finds while the Influence API targets nobody (`InfluenceLink`).
+    static let defaultName = "Kelsey"
+    /// Who the beacon finds, and the title on the glasses and the phone: the Influence API's target, else Kelsey.
+    private(set) var name = Seeker.defaultName
+    var title: String { "\(name) Finder" }
+
+    /// A reading with a distance, as the seek takes it: what goes to the Influence API's live map (`InfluenceLink`).
+    struct Reading {
+        let distance: Float
+        /// Radians right of where the phone points, as `azimuth`.
+        let azimuth: Float?
+        /// Radians above the phone's level, when there is a direction.
+        let elevation: Float?
+        let trend: Trend
+    }
+
+    /// Each reading with a distance, as it comes (`InfluenceLink.send`).
+    @ObservationIgnored var onReading: (@MainActor (Reading) -> Void)?
 
     private(set) var phase: Phase = .off
     /// Meters.
@@ -136,6 +151,19 @@ final class Seeker: NSObject {
         UIApplication.shared.isIdleTimerDisabled = true
     }
 
+    /// Whom to find, from the Influence API (`InfluenceLink`): every screen's title becomes "<Name> Finder", the voice
+    /// says "Finding <Name>", and seeking starts if it was off. The beacon, a Bluetooth name or identifier, is taken
+    /// first when it is found. Nobody goes back to Kelsey. Ranging, the alerts and the lens go on as they were.
+    func find(_ who: String?, beacon: String? = nil) {
+        link.preferred = beacon
+        let next = who ?? Self.defaultName
+        guard next != name else { return }
+        name = next
+        guard who != nil else { return }
+        if !active { start() }
+        if speaks { voice.say(Voice.Line(key: "finding \(next)", words: "Finding \(next).", urgent: true)) }
+    }
+
     private func startBeeping() {
         guard beeps, active, !simulated, beeping == nil else { return }
         beeping = Task { [weak self] in
@@ -221,7 +249,7 @@ final class Seeker: NSObject {
         }
         phase = .lost
         let way = lastSeen.way.map { ", \($0)" } ?? ""
-        voice.say(Voice.Line(key: "lost", words: "Lost \(Self.name). Last seen \(Self.spokenDistance(lastSeen.distance))\(way).",
+        voice.say(Voice.Line(key: "lost", words: "Lost \(name). Last seen \(Self.spokenDistance(lastSeen.distance))\(way).",
                              urgent: true))
         UINotificationFeedbackGenerator().notificationOccurred(.error)
     }
@@ -314,7 +342,7 @@ final class Seeker: NSObject {
             lastSeen = LastSeen(distance: distance, way: way, at: now)
             if separationAlert, !separated, distance > alertBeyond {
                 separated = true
-                let words = "\(Self.name) is past \(Int(alertBeyond)) meters\(way.map { ", \($0)" } ?? "")."
+                let words = "\(name) is past \(Int(alertBeyond)) meters\(way.map { ", \($0)" } ?? "")."
                 voice.say(Voice.Line(key: words, words: words, urgent: true))
                 UINotificationFeedbackGenerator().notificationOccurred(.warning)
             } else if separated, distance < alertBeyond - 1 {
@@ -326,6 +354,10 @@ final class Seeker: NSObject {
         readings.write(at: now, distance: distance, horizontalAngle: horizontalAngle, direction: direction,
                        azimuth: azimuth, trend: trend, youAreMoving: youAreMoving, coaching: coaching)
         if speaks { voice.say(spoken) }
+        if let distance {
+            let elevation = direction.map { atan2($0.y, ($0.x * $0.x + $0.z * $0.z).squareRoot()) }
+            onReading?(Reading(distance: distance, azimuth: azimuth, elevation: elevation, trend: trend))
+        }
     }
 
     /// Closer or farther: the last half second against what it was a second and a half before.
@@ -392,7 +424,7 @@ final class Seeker: NSObject {
             if case .connecting = link.state { return "Connecting to the beacon…" }
             return "Looking for the beacon…"
         case .starting: return "Starting UWB…"
-        case .lost: return lastSeen.map { "Lost \(Self.name). \(Self.lastSeenWords($0))" } ?? "Lost the signal"
+        case .lost: return lastSeen.map { "Lost \(name). \(Self.lastSeenWords($0))" } ?? "Lost the signal"
         case .unavailable(let why): return why
         case .ranging:
             guard let distance else { return "Starting UWB…" }
@@ -441,25 +473,26 @@ final class Seeker: NSObject {
     }
 
     /// The glasses' screen while not seeking: one button, which a pinch of the Neural Band presses to start.
-    static let invitation = Glance(
-        place: title, status: "Find \(name)", line: "Pinch Find to start.",
-        note: "Or tap \(title) at the top of the phone.",
-        choices: [.init(press: .seek, label: "Find", icon: "triangleRight", primary: true)])
+    var invitation: Glance {
+        Glance(place: title, status: "Find \(name)", line: "Pinch Find to start.",
+               note: "Or tap \(title) at the top of the phone.",
+               choices: [.init(press: .seek, label: "Find", icon: "triangleRight", primary: true)])
+    }
 
     /// The glasses' screen while seeking: the title, the arrow when there is a direction, the distance, a few words.
     var glance: Glance {
         if phase == .lost, let lastSeen {
-            return Glance(place: Self.title, status: "Lost \(Self.name)", line: Self.lastSeenWords(lastSeen), note: nil,
+            return Glance(place: title, status: "Lost \(name)", line: Self.lastSeenWords(lastSeen), note: nil,
                           choices: [], way: true)
         }
         guard phase == .ranging, let distance else {
-            return Glance(place: Self.title, status: lensPhase, line: guidance, note: nil, choices: [], way: true)
+            return Glance(place: title, status: lensPhase, line: guidance, note: nil, choices: [], way: true)
         }
         if distance < Self.arrived {
-            return Glance(place: Self.title, status: "You're there",
-                          line: "\(Self.name) is within \(Self.meters(distance))", note: nil, choices: [], way: true)
+            return Glance(place: title, status: "You're there",
+                          line: "\(name) is within \(Self.meters(distance))", note: nil, choices: [], way: true)
         }
-        return Glance(place: Self.title, status: Self.meters(distance), line: lensLine, note: nil, choices: [],
+        return Glance(place: title, status: Self.meters(distance), line: lensLine, note: nil, choices: [],
                       arrow: azimuth.map(Self.arrowDegrees), way: true)
     }
 
@@ -478,8 +511,8 @@ final class Seeker: NSObject {
     var motion: String? {
         guard phase == .ranging, let youAreMoving else { return nil }
         switch (trend, youAreMoving) {
-        case (.farther, false): return "\(Self.name) is moving away"
-        case (.closer, false): return "\(Self.name) is coming closer"
+        case (.farther, false): return "\(name) is moving away"
+        case (.closer, false): return "\(name) is coming closer"
         case (.farther, true): return azimuth == nil ? "Wrong way: turn around" : nil
         default: return nil
         }

@@ -11,21 +11,31 @@ import SwiftUI
 /// one, for the preview on a simulator. None is kept.
 ///
 /// The glasses show the beacon (`Lens`): its invitation, then the way to it; the demo only with "Show it on the glasses"
-/// off.
+/// off. The Influence API (`InfluenceLink`) names whom the beacon finds and takes every reading for its live map.
 @main
 struct SpikeApp: App {
     @State private var glasses = Glasses()
     @State private var demo = Demo()
     @State private var seeker = Seeker()
+    @State private var influence = InfluenceLink()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
-            SpikeView(glasses: glasses, demo: demo, seeker: seeker)
+            SpikeView(glasses: glasses, demo: demo, seeker: seeker, influence: influence)
                 .onOpenURL { glasses.handle($0) }
+                .onChange(of: influence.target, initial: true) { _, target in
+                    seeker.find(target?.name, beacon: target?.hardwareID)
+                }
+                .onChange(of: scenePhase, initial: true) { _, phase in
+                    // Inactive (a permission prompt, Control Centre) is still in front: only the background stops it.
+                    influence.setForeground(phase != .background)
+                }
                 .onChange(of: Lens.glance(seeker: seeker, demo: demo), initial: true) { _, glance in
                     glasses.show(glance)
                 }
                 .task {
+                    seeker.onReading = { [influence] reading in influence.send(reading) }
                     glasses.onPress = { [demo, seeker] press in
                         Lens.press(press, from: .glasses, seeker: seeker, demo: demo)
                     }
@@ -53,7 +63,7 @@ struct SpikeApp: App {
 enum Lens {
     static func glance(seeker: Seeker, demo: Demo) -> Glance {
         guard seeker.showsOnGlasses else { return demo.glance }
-        return seeker.active ? seeker.glance : Seeker.invitation
+        return seeker.active ? seeker.glance : seeker.invitation
     }
 
     static func press(_ press: Press, from source: Source, seeker: Seeker, demo: Demo) {

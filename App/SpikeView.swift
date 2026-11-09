@@ -7,6 +7,7 @@ struct SpikeView: View {
     let glasses: Glasses
     let demo: Demo
     let seeker: Seeker
+    let influence: InfluenceLink
     @State private var preview = false
     /// The screens pushed over this one: the seeking's, opened by itself whenever seeking starts.
     @State private var path: [Route] = []
@@ -22,10 +23,11 @@ struct SpikeView: View {
                     NavigationLink(value: Route.seek) {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(Seeker.title).font(.title3.weight(.semibold))
-                                Text(seeker.active ? seeker.guidance : "Find \(Seeker.name), or pinch Find on the glasses")
+                                Text(seeker.title).font(.title3.weight(.semibold))
+                                Text(seeker.active ? seeker.guidance : "Find \(seeker.name), or pinch Find on the glasses")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
+                                InfluenceLine(influence: influence)
                             }
                         } icon: {
                             Image(systemName: "location.north.circle.fill").font(.title).foregroundStyle(.tint)
@@ -109,7 +111,7 @@ struct SpikeView: View {
                 }
             }
             .navigationTitle("Ray-Ban spike")
-            .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker) }
+            .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker, influence: influence) }
         }
         .onChange(of: seeker.active) { _, active in
             if active, path.isEmpty { path = [.seek] }

@@ -26,7 +26,7 @@ struct Glance: Equatable, Sendable {
 /// A button's meaning, as it comes back from the glasses or from the phone.
 enum Press: String, Sendable {
     case start, talk, skip, send, cancel, keep, change, again
-    /// Starts seeking a UWB beacon (`Seeker.invitation`).
+    /// Starts seeking a UWB beacon (`Seeker`'s `invitation`).
     case seek
 }
 
