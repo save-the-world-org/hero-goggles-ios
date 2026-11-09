@@ -1,7 +1,7 @@
 {
   "harness": 1,
   "$comment": "The manifest (ADR 0019). Nothing else may hardcode a harness path: resolve one with node .infrared/bin/bb-harness.mjs path <key>. A path left out is not kept in this repo. template is written by bb-harness sync, never by hand.",
-  "product": "spike-rayban",
+  "product": "hero-goggles-ios",
   "root": ".infrared",
   "delivery": {
     "mode": "trunk"

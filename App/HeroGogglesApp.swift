@@ -13,7 +13,7 @@ import SwiftUI
 /// The glasses show the beacon (`Lens`): its invitation, then the way to it; the demo only with "Show it on the glasses"
 /// off. The Influence API (`InfluenceLink`) names whom the beacon finds and takes every reading for its live map.
 @main
-struct SpikeApp: App {
+struct HeroGogglesApp: App {
     @State private var glasses = Glasses()
     @State private var demo = Demo()
     @State private var seeker = Seeker()
@@ -22,7 +22,7 @@ struct SpikeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SpikeView(glasses: glasses, demo: demo, seeker: seeker, influence: influence)
+            HeroGogglesView(glasses: glasses, demo: demo, seeker: seeker, influence: influence)
                 .onOpenURL { glasses.handle($0) }
                 .onChange(of: influence.target, initial: true) { _, target in
                     seeker.find(target?.name, beacon: target?.hardwareID)

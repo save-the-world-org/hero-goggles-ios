@@ -80,7 +80,7 @@ final class Glasses {
     /// Failures in a row since the glasses last connected: at three it waits for Try again.
     @ObservationIgnored private var failures = 0
 
-    private static let log = Logger(subsystem: "io.darkshift.rayban-spike", category: "glasses")
+    private static let log = Logger(subsystem: "io.darkshift.hero-goggles-ios", category: "glasses")
 
     /// An error in words: the toolkit's own (`DatError`), or the system's.
     private static func words(_ error: any Error) -> String {

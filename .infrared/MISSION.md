@@ -1,4 +1,4 @@
-# Mission: spike-rayban
+# Mission: hero-goggles-ios
 
 **What this repo is, in two sentences.** An iPhone app on Meta's Wearables Device Access Toolkit 1.0.1 that draws a
 small conversation on Meta Ray-Ban Display glasses and takes its button presses from the Neural Band, alone, so the
