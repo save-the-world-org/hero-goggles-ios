@@ -7,28 +7,60 @@ import SwiftUI
 /// Check arguments, for a run with no hands: `-spike.preview YES` turns the preview on at launch (simulated glasses from
 /// the toolkit's MockDeviceKit, drawn on the phone), and `-spike.autoplay YES` presses the button in focus every five
 /// seconds, from the phone: the simulated glasses' own inputs do not press the display's buttons at 1.0.1
-/// (docs/findings.md). Neither is kept.
+/// (docs/findings.md). `-seek.start YES` starts seeking a UWB beacon at launch, and `-seek.simulate YES` seeks a made-up
+/// one, for the preview on a simulator. None is kept.
+///
+/// The glasses show the beacon (`Lens`): its invitation, then the way to it; the demo only with "Show it on the glasses"
+/// off.
 @main
 struct SpikeApp: App {
     @State private var glasses = Glasses()
     @State private var demo = Demo()
+    @State private var seeker = Seeker()
 
     var body: some Scene {
         WindowGroup {
-            SpikeView(glasses: glasses, demo: demo)
+            SpikeView(glasses: glasses, demo: demo, seeker: seeker)
                 .onOpenURL { glasses.handle($0) }
-                .onChange(of: demo.glance, initial: true) { _, glance in glasses.show(glance) }
+                .onChange(of: Lens.glance(seeker: seeker, demo: demo), initial: true) { _, glance in
+                    glasses.show(glance)
+                }
                 .task {
-                    glasses.onPress = { [demo] press in demo.press(press, from: .glasses) }
+                    glasses.onPress = { [demo, seeker] press in
+                        Lens.press(press, from: .glasses, seeker: seeker, demo: demo)
+                    }
                     glasses.begin()
                     let defaults = UserDefaults.standard
                     if defaults.bool(forKey: "spike.preview") { glasses.setPreview(true) }
+                    if defaults.bool(forKey: "seek.simulate") {
+                        seeker.simulate()
+                    } else if defaults.bool(forKey: "seek.start") {
+                        seeker.start()
+                    }
                     guard defaults.bool(forKey: "spike.autoplay") else { return }
                     while !Task.isCancelled {
                         try? await Task.sleep(for: .seconds(5))
                         demo.pressPrimary(from: .autoplay)
                     }
                 }
+        }
+    }
+}
+
+/// What the glasses show, and where a press of their buttons goes: the beacon's invitation, then the way to it while
+/// seeking; the demo only when "Show it on the glasses" is off.
+@MainActor
+enum Lens {
+    static func glance(seeker: Seeker, demo: Demo) -> Glance {
+        guard seeker.showsOnGlasses else { return demo.glance }
+        return seeker.active ? seeker.glance : Seeker.invitation
+    }
+
+    static func press(_ press: Press, from source: Source, seeker: Seeker, demo: Demo) {
+        if press == .seek {
+            seeker.start()
+        } else if !seeker.showsOnGlasses {
+            demo.press(press, from: source)
         }
     }
 }

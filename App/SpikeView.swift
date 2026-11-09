@@ -6,11 +6,37 @@ import UIKit
 struct SpikeView: View {
     let glasses: Glasses
     let demo: Demo
+    let seeker: Seeker
     @State private var preview = false
+    /// The screens pushed over this one: the seeking's, opened by itself whenever seeking starts.
+    @State private var path: [Route] = []
+
+    private enum Route: Hashable {
+        case seek
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
+                Section {
+                    NavigationLink(value: Route.seek) {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(Seeker.title).font(.title3.weight(.semibold))
+                                Text(seeker.active ? seeker.guidance : "Find \(Seeker.name), or pinch Find on the glasses")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: "location.north.circle.fill").font(.title).foregroundStyle(.tint)
+                        }
+                        .padding(.vertical, 6)
+                    }
+                } header: {
+                    Text("UWB beacon")
+                } footer: {
+                    Text("A DWM3001CDK on Qorvo's Nearby Interaction firmware: how far, and which way, on the phone, the glasses and in your ear.")
+                }
                 Section {
                     Toggle("Simulated Ray-Ban Display", isOn: $preview)
                     if let view = glasses.previewView {
@@ -57,7 +83,9 @@ struct SpikeView: View {
                     Text("On, unfolded and near this phone, with Developer Mode on in Meta AI.")
                 }
                 Section("On the glasses now") {
-                    GlanceCard(glance: demo.glance) { demo.press($0, from: .phone) }
+                    GlanceCard(glance: Lens.glance(seeker: seeker, demo: demo)) {
+                        Lens.press($0, from: .phone, seeker: seeker, demo: demo)
+                    }
                 }
                 Section {
                     if demo.presses.isEmpty {
@@ -81,6 +109,10 @@ struct SpikeView: View {
                 }
             }
             .navigationTitle("Ray-Ban spike")
+            .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker) }
+        }
+        .onChange(of: seeker.active) { _, active in
+            if active, path.isEmpty { path = [.seek] }
         }
         .onChange(of: preview) { _, on in glasses.setPreview(on) }
         .onChange(of: glasses.previewing, initial: true) { _, on in preview = on }

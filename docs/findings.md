@@ -76,3 +76,33 @@ words heard through the glasses: re-learn the voice with the glasses on.
   voice does not link there (`_MTLTensorDomain`, `_MTLIOErrorDomain`).
 - A workstation whose git rewrites `https://github.com/` to SSH fetches the toolkit with the person's SSH key; with the
   key locked, `GIT_CONFIG_GLOBAL=/dev/null` fetches the public package over HTTPS.
+
+## Seeking a UWB beacon
+
+From 2026-11-07, with a Qorvo DWM3001CDK on Qorvo's Nearby Interaction firmware (QANI, SDK 1.1.1) and an iPhone 17 Pro.
+The beacon's side is darkshiftio/beacon-firmware (`docs/qani.md`).
+
+- **The handshake** (read in Qorvo's source, seen): connect over Bluetooth, subscribe to QANI's TX characteristic,
+  write `0x0A` to its RX; the beacon answers `0x01` and its accessory configuration data, which makes a
+  `NINearbyAccessoryConfiguration`; run it in an `NISession`, which hands back a shareable configuration in
+  `didGenerateShareableConfigurationData`; write `0x0B` and that data; the beacon answers `0x02`, and readings arrive in
+  `didUpdate`. `0x0C` stops it, and it answers `0x03`.
+- **Direction needs the camera** (read, Apple's docs; seen in the capabilities): an iPhone gives a third-party
+  accessory a direction only with camera assistance (`isCameraAssistanceEnabled`), and the iPhone 17 Pro reports
+  `supportsDirectionMeasurement` false. With camera assistance on and no `setARSession`, Nearby Interaction runs an AR
+  session of its own. The arrow's angle is `atan2(x, -z)` of the direction vector (x right, y up, minus z forward).
+  Distance works without the camera.
+- **Only one phone at a time** (seen): QANI takes one connection, so Qorvo's iPhone app, left open, keeps this one out.
+- **An arrow in the lens** (seen on the pair): the toolkit's `Icon` set has no arrows at every angle, so the app draws
+  one into a `UIImage` and sends `Image(image:sizePreset:)`. At `.icon` it was too small to read; at `.fill` from a
+  120-pixel image, blurred and too big. A 640 by 280 canvas with the arrow drawn in its middle, at `.fill`, reads well.
+- **The glasses are its speakers** (seen): spoken words and `AVAudioEngine` beeps play in the glasses while they are
+  the phone's Bluetooth headset. A change of route stops the engine; the beeper starts it again on the next beep.
+- **Who moves** (seen): Core Motion's activity (`CMMotionActivityManager`) says whether the person is walking or still,
+  which tells "the beacon is moving away" from "you are walking away".
+- **The distances seemed "a touch off and stuck at weird increments"** (jarededwards, 2026-11-08). The voice rounded
+  coarsely, and says tenths from 1 to 5 m since; every reading goes to `seek-*.csv` to show the rest. The beacon runs on
+  Qorvo's default UWB calibration, which Qorvo says ranges less accurately, after a chip erase (beacon-firmware
+  `docs/qani.md`, Calibration).
+- **Swift 6** (built): `NISessionDelegate` and `CBCentralManagerDelegate` are not isolated to the main actor, so the
+  app's `@MainActor` classes conform with `@preconcurrency`.

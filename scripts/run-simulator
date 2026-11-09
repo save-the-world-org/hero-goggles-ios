@@ -3,6 +3,7 @@
 # button in focus every six seconds, and saves a screenshot of the phone after each press to .build/screens/.
 #   scripts/run-simulator                          the simulator "iPhone 18 Pro"
 #   SIMULATOR="iPhone 17" scripts/run-simulator    another one (xcrun simctl list devices available)
+#   SEEK=1 scripts/run-simulator                   seeking a made-up UWB beacon in place of the demo
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -15,8 +16,13 @@ app=.build/simulator/Build/Products/Debug-iphonesimulator/RayBanSpike.app
 xcrun simctl boot "$simulator" 2>/dev/null || true
 xcrun simctl bootstatus "$simulator" -b >/dev/null
 xcrun simctl install "$simulator" "$app"
-xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
-  -spike.preview YES -spike.autoplay YES >/dev/null
+if [ -n "${SEEK:-}" ]; then
+  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
+    -spike.preview YES -seek.simulate YES >/dev/null
+else
+  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
+    -spike.preview YES -spike.autoplay YES >/dev/null
+fi
 mkdir -p .build/screens
 for i in 1 2 3 4 5 6 7 8; do
   sleep 5

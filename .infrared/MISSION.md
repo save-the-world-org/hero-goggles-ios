@@ -5,11 +5,13 @@ small conversation on Meta Ray-Ban Display glasses and takes its button presses 
 glasses can be tried without Infrared, a Mac or a planning session, and on a simulator. It exists to learn what the
 glasses' interface can be before Infrared depends on it; Infrared's own use of them is localred's iPhone app.
 
-**What we are doing next.** The first run on a real pair: Developer Mode on in Meta AI, the app registered, the
-display opened, and presses from the Neural Band arriving on the phone (the Presses list says "glasses").
+**What we are doing next.** Seeking a UWB beacon away from the Mac, with the glasses on: the beacon on a power bank,
+the alert past 10 m, "moving away" while you stand still, Lost out of range, and the distance at a measured 1 m and 3 m,
+from the app's log. Then correct the distance. The glasses demo still waits on presses from the Neural Band arriving on
+the phone (the Presses list says "glasses").
 
-**How we know it worked.** On a real pair, every screen of the demo drawn and pressed through from the Neural Band
-alone, and the draw time the app reports written down in `README.md` and `PROGRESS.md`.
+**How we know it worked.** A person finds the beacon with the lens and the voice alone, and the log shows the distance
+within ten centimetres of a measured one, written down in `README.md` and `PROGRESS.md`.
 
 ## The loop
 

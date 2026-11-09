@@ -58,7 +58,14 @@
 		<string>com.meta.ar.wearable</string>
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>The spike connects to your Meta glasses over Bluetooth, to draw on their display.</string>
+	<string>The spike connects to your Meta glasses over Bluetooth, to draw on their display, and to your UWB beacon, to start measuring the way to it.</string>
+	<!-- Seeking a UWB beacon (App/Seeker.swift): Nearby Interaction for its distance, and the camera for its direction, which an iPhone gives a third-party beacon only with camera assistance. -->
+	<key>NSNearbyInteractionUsageDescription</key>
+	<string>The spike measures how far away your UWB beacon is, and which way, to guide you to it.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Your phone's motion tells who moves when the distance grows: the beacon, while you stand still, or you, walking the wrong way.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera lets the iPhone work out which way your UWB beacon is (Apple's camera assistance). Nothing is recorded.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>The spike finds your Meta glasses over Wi-Fi, to draw on their display.</string>
 	<key>NSBonjourServices</key>

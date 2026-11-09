@@ -10,6 +10,10 @@ struct Glance: Equatable, Sendable {
     var line: String
     var note: String?
     var choices: [Choice]
+    /// An arrow above the status, in degrees right of straight ahead: the way to a beacon (`Seeker`).
+    var arrow: Int? = nil
+    /// Drawn as the way to a beacon: the title, the arrow when there is one, the distance big, one line under it.
+    var way = false
 
     struct Choice: Equatable, Sendable {
         var press: Press
@@ -22,6 +26,8 @@ struct Glance: Equatable, Sendable {
 /// A button's meaning, as it comes back from the glasses or from the phone.
 enum Press: String, Sendable {
     case start, talk, skip, send, cancel, keep, change, again
+    /// Starts seeking a UWB beacon (`Seeker.invitation`).
+    case seek
 }
 
 /// Where a press came from: the glasses (a pinch of the Neural Band on a button the toolkit drew), the phone's copy of the
