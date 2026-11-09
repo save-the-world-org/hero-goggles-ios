@@ -62,6 +62,8 @@ final class BeaconLink: NSObject {
     private(set) var rssi: Int?
     /// Which of `services` the beacon speaks on.
     private(set) var serviceName: String?
+    /// The taken beacon's 8-hex ID, from its advertised name (`beaconID`): what each reading names it by.
+    private(set) var connectedID: String?
     /// Every service the connected beacon offered, for when none of `services` is among them.
     private(set) var servicesSeen: [String] = []
 
@@ -142,6 +144,7 @@ final class BeaconLink: NSObject {
         rx = nil
         tx = nil
         serviceName = nil
+        connectedID = nil
     }
 
     private func isBeacon(_ advertisement: [String: Any], name: String?) -> Bool {
@@ -202,6 +205,7 @@ extension BeaconLink: @preconcurrency CBCentralManagerDelegate {
         self.name = name ?? "Beacon"
         self.rssi = rssi
         self.peripheral = peripheral
+        connectedID = Self.beaconID(name)
         peripheral.delegate = self
         state = .connecting(self.name ?? "Beacon")
         Self.log.info("found \(self.name ?? "-", privacy: .public) at \(rssi) dBm")

@@ -150,15 +150,21 @@ final class InfluenceLink: NSObject {
         }
     }
 
-    /// A reading from the seek, for the live map: two a second at most, one at a time, dropped when it cannot go. Filed
-    /// by the API under the current target's beacon.
+    /// A reading from the seek, for the live map: two a second at most, one at a time, dropped when it cannot go. Names
+    /// the seeker (`seeker`, and `seekerId` as before) and the ranged beacon (`hardwareId`, as the API spelled it when
+    /// it is the target's), so the API files it under both.
     func send(_ reading: Seeker.Reading) {
         guard enabled, !posting, Date.now.timeIntervalSince(lastPost) >= Self.spacing else { return }
         var body: [String: Any] = [
             "seekerId": seekerID,
+            "seeker": seekerID,
             "distance": Self.round(Double(reading.distance), 3),
             "trend": Self.words(reading.trend),
         ]
+        if let id = reading.beacon ?? BeaconLink.beaconID(target?.hardwareID) {
+            let given = target?.hardwareID
+            body["hardwareId"] = given.flatMap { BeaconLink.beaconID($0) == id ? $0 : nil } ?? id
+        }
         if let azimuth = reading.azimuth { body["azimuthDeg"] = Self.round(Double(azimuth) * 180 / .pi, 1) }
         if let elevation = reading.elevation { body["elevationDeg"] = Self.round(Double(elevation) * 180 / .pi, 1) }
         if let heading { body["heading"] = Self.round(heading, 1) }

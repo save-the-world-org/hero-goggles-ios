@@ -56,6 +56,8 @@ final class Seeker: NSObject {
         /// Radians above the phone's level, when there is a direction.
         let elevation: Float?
         let trend: Trend
+        /// The ranged beacon's 8-hex ID; nil on the simulated walk.
+        let beacon: String?
     }
 
     /// Each reading with a distance, as it comes (`InfluenceLink.send`).
@@ -356,7 +358,8 @@ final class Seeker: NSObject {
         if speaks { voice.say(spoken) }
         if let distance {
             let elevation = direction.map { atan2($0.y, ($0.x * $0.x + $0.z * $0.z).squareRoot()) }
-            onReading?(Reading(distance: distance, azimuth: azimuth, elevation: elevation, trend: trend))
+            onReading?(Reading(distance: distance, azimuth: azimuth, elevation: elevation, trend: trend,
+                               beacon: link.connectedID))
         }
     }
 
