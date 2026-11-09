@@ -9,18 +9,18 @@ cd "$(dirname "$0")/.."
 
 simulator=${SIMULATOR:-iPhone 18 Pro}
 xcodegen generate --quiet
-xcodebuild -project RayBanSpike.xcodeproj -scheme RayBanSpike -destination "platform=iOS Simulator,name=$simulator" \
+xcodebuild -project HeroGoggles.xcodeproj -scheme HeroGoggles -destination "platform=iOS Simulator,name=$simulator" \
   -derivedDataPath .build/simulator -quiet build
-app=.build/simulator/Build/Products/Debug-iphonesimulator/RayBanSpike.app
+app=.build/simulator/Build/Products/Debug-iphonesimulator/HeroGoggles.app
 
 xcrun simctl boot "$simulator" 2>/dev/null || true
 xcrun simctl bootstatus "$simulator" -b >/dev/null
 xcrun simctl install "$simulator" "$app"
 if [ -n "${SEEK:-}" ]; then
-  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
+  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.hero-goggles-ios \
     -spike.preview YES -seek.simulate YES >/dev/null
 else
-  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.rayban-spike \
+  xcrun simctl launch --terminate-running-process "$simulator" io.darkshift.hero-goggles-ios \
     -spike.preview YES -spike.autoplay YES >/dev/null
 fi
 mkdir -p .build/screens
@@ -29,4 +29,4 @@ for i in 1 2 3 4 5 6 7 8; do
   xcrun simctl io "$simulator" screenshot ".build/screens/screen-$i.png" >/dev/null 2>&1
   sleep 1
 done
-echo "screenshots in .build/screens/; the app goes on pressing until you quit it (xcrun simctl terminate \"$simulator\" io.darkshift.rayban-spike)"
+echo "screenshots in .build/screens/; the app goes on pressing until you quit it (xcrun simctl terminate \"$simulator\" io.darkshift.hero-goggles-ios)"

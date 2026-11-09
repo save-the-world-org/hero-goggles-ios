@@ -87,7 +87,7 @@ final class Demo {
         let place = "Question \(asking % Self.questions.count + 1) of \(Self.questions.count) · \(question.lead)"
         switch step {
         case .hello:
-            return Glance(place: "Ray-Ban spike", status: "Hello",
+            return Glance(place: "Hero Goggles", status: "Hello",
                           line: "This screen comes from your phone. Pinch to press the button in focus; swipe to move to the next.",
                           note: "Nothing listens: the answers are made up.",
                           choices: [.init(press: .start, label: "Start", icon: "triangleRight", primary: true)])

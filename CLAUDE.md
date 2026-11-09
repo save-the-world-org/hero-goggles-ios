@@ -1,6 +1,6 @@
-# spike-rayban
+# hero-goggles-ios
 
-The Meta Ray-Ban Display spike: an iPhone app on Meta's Wearables Device Access Toolkit 1.0.1 that draws on the
+Hero Goggles (hero-goggles-ios), the Meta Ray-Ban Display app: an iPhone app on Meta's Wearables Device Access Toolkit 1.0.1 that draws on the
 glasses' display and takes Neural Band presses, with nothing of Infrared in it, and since 2026-11-08 seeks a UWB beacon
 ("Hero Finder", `App/Seeker.swift`). Infrared's own use of the glasses is in darkshiftio/localred's iPhone app
 (`app/Mobile/Glasses`, `docs/app.md`, "Glasses"). The beacon's firmware and tools are save-the-world-org/beacon-firmware.
@@ -13,7 +13,7 @@ darkshiftio/workspace's `CLAUDE.md` applies here too.
   `Config/Signing.local.xcconfig`, never in a committed file.
 - **Nothing goes to Meta that need not.** The toolkit's analytics and crash reports stay opted out (`Config/Info.plist`).
 - **Signing is each person's own.** Their Apple Developer team goes in `Config/Signing.local.xcconfig`, which git
-  ignores; never commit it. The first signed build registers `io.darkshift.rayban-spike` with that person's team, so
+  ignores; never commit it. The first signed build registers `io.darkshift.hero-goggles-ios` with that person's team, so
   `make device` is theirs to run.
 - **The glasses are a person's.** Evidence from a real pair needs the person wearing them; a simulator run uses Meta's
   simulated glasses (`make sim`), whose own inputs do not press the display's buttons at 1.0.1 (`docs/findings.md`).

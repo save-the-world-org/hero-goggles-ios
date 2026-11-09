@@ -66,3 +66,22 @@ target and posts every reading to it.
 **Next.** Register people and beacons and join them, so each seeker finds their own beacon: today the API's target is
 one per seeker (`seeker=phone`), and the beacon is the first one found. Integrate with hero-goggles (johndietz's, in
 flight).
+
+## 2026-11-09: hero-goggles-ios, the MVP, released as source v0.1.0
+
+**Done.** At jarededwards's word the repo is `save-the-world-org/hero-goggles-ios` (renamed from spike-rayban; GitHub
+redirects the old name), and so is everything in it: the Xcode project and target `HeroGoggles`, the bundle identifier
+`io.darkshift.hero-goggles-ios`, the display name and the permission prompts "Hero Goggles", the log subsystem, the
+scripts and the docs. Since the last entry (`5f9736f` to `bc27bd2`): the seek ranges only the target's beacon, matched
+on the eight hex digits inside its advertised name; every reading carries its seeker and the beacon's `hardwareId`; a
+new target scans again; no fallback to any nearby beacon, so with no target nothing is ranged; each phone has its own
+seeker id (`seeker-xxxxxx`), shown and editable on the seek screen, and `-influence.seeker <id>` at launch is kept.
+On 2026-11-09 jarededwards's iPhone 17 Pro ranged a new board (`CA588E78`, Kunal's beacon in Influence's registry) and
+its readings reached the live map.
+
+**Learned.** A new bundle identifier is a new app on the phone: install it, connect it with Meta AI once more, and
+delete the old "Ray-Ban spike" so two apps never contend for a beacon's one connection. A board on a power bank went
+quiet at about 13:50: some power banks switch off at a board's low draw.
+
+**Next.** 0.2: zones and floors (a Bluetooth tag per hero and a listener per floor), Bluetooth at +8 dBm and
+advertising while connected (the beacon firmware build), and the calibration offset per board.

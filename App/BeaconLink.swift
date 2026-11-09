@@ -83,7 +83,7 @@ final class BeaconLink: NSObject {
     @ObservationIgnored private var tx: CBCharacteristic?
     @ObservationIgnored private var wanted = false
 
-    private static let log = Logger(subsystem: "io.darkshift.rayban-spike", category: "beacon")
+    private static let log = Logger(subsystem: "io.darkshift.hero-goggles-ios", category: "beacon")
 
     /// Looks for the target's beacon and connects to it, then keeps it: found again whenever it goes.
     func start() {
@@ -168,7 +168,7 @@ extension BeaconLink: @preconcurrency CBCentralManagerDelegate {
             scan()
         case .unauthorized:
             state = .off
-            problem = "Bluetooth isn't allowed for this app: Settings › Apps › Ray-Ban spike."
+            problem = "Bluetooth isn't allowed for this app: Settings › Apps › Hero Goggles."
         case .poweredOff:
             state = .off
             problem = "Bluetooth is off."

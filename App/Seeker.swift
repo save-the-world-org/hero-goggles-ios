@@ -123,7 +123,7 @@ final class Seeker: NSObject {
     @ObservationIgnored private let beeper = Beeper()
     @ObservationIgnored private var beeping: Task<Void, Never>?
 
-    private static let log = Logger(subsystem: "io.darkshift.rayban-spike", category: "seek")
+    private static let log = Logger(subsystem: "io.darkshift.hero-goggles-ios", category: "seek")
 
     static var capabilities: any NIDeviceCapability { NISession.deviceCapabilities }
 
@@ -641,7 +641,7 @@ extension Seeker: @preconcurrency NISessionDelegate {
         guard session === self.session else { return }
         self.session = nil
         if let error = error as? NIError, error.code == .userDidNotAllow {
-            phase = .unavailable("Nearby Interaction isn't allowed: Settings › Apps › Ray-Ban spike.")
+            phase = .unavailable("Nearby Interaction isn't allowed: Settings › Apps › Hero Goggles.")
             return
         }
         problem = "Nearby Interaction stopped: \(error.localizedDescription)."

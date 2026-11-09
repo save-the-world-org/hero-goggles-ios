@@ -68,7 +68,7 @@ final class InfluenceLink: NSObject {
     @ObservationIgnored private var position: CLLocation?
     @ObservationIgnored private var heading: Double?
 
-    private static let log = Logger(subsystem: "io.darkshift.rayban-spike", category: "influence")
+    private static let log = Logger(subsystem: "io.darkshift.hero-goggles-ios", category: "influence")
 
     override init() {
         let defaults = UserDefaults.standard

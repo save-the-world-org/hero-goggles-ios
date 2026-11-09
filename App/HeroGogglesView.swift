@@ -3,7 +3,7 @@ import UIKit
 
 /// The phone's side of the spike: the preview, Meta AI and the glasses, what the glasses show now with the same buttons,
 /// and every press with where it came from.
-struct SpikeView: View {
+struct HeroGogglesView: View {
     let glasses: Glasses
     let demo: Demo
     let seeker: Seeker
@@ -110,7 +110,7 @@ struct SpikeView: View {
                     Text("A pinch on the Neural Band shows here as glasses.")
                 }
             }
-            .navigationTitle("Ray-Ban spike")
+            .navigationTitle("Hero Goggles")
             .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker, influence: influence) }
         }
         .onChange(of: seeker.active) { _, active in

@@ -1,5 +1,5 @@
 // Your own Apple Developer team, for signing the spike for your iPhone. Copy this file to Signing.local.xcconfig (git
 // ignores it) and put your team's ID here: developer.apple.com, Account, Membership details, ten letters and digits. The
-// first signed build for a device registers the app's identifier, io.darkshift.rayban-spike, with your team
+// first signed build for a device registers the app's identifier, io.darkshift.hero-goggles-ios, with your team
 // (xcodebuild -allowProvisioningUpdates, as scripts/install-device runs it, or Xcode itself).
 DEVELOPMENT_TEAM = YOURTEAMID

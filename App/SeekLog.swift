@@ -4,7 +4,7 @@ import simd
 /// Every reading of a seeking session, written to a CSV file in the app's Documents (`seek-<date>-<time>.csv`), to look
 /// at a test afterwards: how often Nearby Interaction gave a distance and in what steps, and how the direction came and
 /// went. Copy them off the phone with `xcrun devicectl device copy from --device <id> --domain-type appDataContainer
-/// --domain-identifier io.darkshift.rayban-spike --source Documents --destination <folder>`.
+/// --domain-identifier io.darkshift.hero-goggles-ios --source Documents --destination <folder>`.
 @MainActor
 final class SeekLog {
     private var handle: FileHandle?

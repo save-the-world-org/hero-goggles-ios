@@ -1,4 +1,4 @@
-# AGENTS.md: spike-rayban
+# AGENTS.md: hero-goggles-ios
 
 This file stays at the repo root and stays short. Every agent reads it: Claude
 Code through `CLAUDE.md`, which imports it, Codex directly, and Infrared's runner

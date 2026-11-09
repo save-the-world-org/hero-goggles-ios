@@ -1,10 +1,10 @@
-# The spike's Xcode project, for XcodeGen (2.46): `xcodegen generate` writes RayBanSpike.xcodeproj, which git ignores.
+# The spike's Xcode project, for XcodeGen (2.46): `xcodegen generate` writes HeroGoggles.xcodeproj, which git ignores.
 # One iPhone app on Meta's Wearables Device Access Toolkit and nothing else, so it builds for the simulators too, where
 # localred's app does not (its neural voice's MLX does not link for the simulator on Xcode 27.2).
 #
 # Signing is automatic, with each person's own team from Config/Signing.local.xcconfig (Config/Signing.xcconfig says
 # how); the simulators and the generic iOS destination need none. README.md says how to run it.
-name: RayBanSpike
+name: HeroGoggles
 options:
   bundleIdPrefix: io.darkshift
   deploymentTarget:
@@ -28,7 +28,7 @@ packages:
     url: https://github.com/facebook/meta-wearables-dat-ios
     exactVersion: 1.0.1
 targets:
-  RayBanSpike:
+  HeroGoggles:
     type: application
     platform: iOS
     sources:
@@ -43,12 +43,12 @@ targets:
         product: MWDATMockDevice
     settings:
       base:
-        PRODUCT_NAME: RayBanSpike
+        PRODUCT_NAME: HeroGoggles
         # Merged with the keys generated from the INFOPLIST_KEY_ settings below: the toolkit's keys.
         INFOPLIST_FILE: Config/Info.plist
-        PRODUCT_BUNDLE_IDENTIFIER: io.darkshift.rayban-spike
+        PRODUCT_BUNDLE_IDENTIFIER: io.darkshift.hero-goggles-ios
         TARGETED_DEVICE_FAMILY: "1"
-        INFOPLIST_KEY_CFBundleDisplayName: Ray-Ban spike
+        INFOPLIST_KEY_CFBundleDisplayName: Hero Goggles
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait

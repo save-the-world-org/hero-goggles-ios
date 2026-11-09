@@ -1,4 +1,4 @@
-# spike-rayban
+# hero-goggles-ios
 
 What an iPhone app can do with [Meta Ray-Ban Display](https://www.meta.com/ai-glasses/meta-ray-ban-display/) glasses,
 through Meta's [Wearables Device Access Toolkit](https://github.com/facebook/meta-wearables-dat-ios) 1.0.1: draw on
@@ -41,7 +41,7 @@ flowchart LR
   app -->|"send(FlexBox)"| dat
   dat -->|"Bluetooth, Wi-Fi"| glasses
   app -.->|"Connect with Meta AI"| metaai
-  metaai -.->|"calls back on io.darkshift.rayban-spike"| app
+  metaai -.->|"calls back on io.darkshift.hero-goggles-ios"| app
   band -->|"pinch, swipe"| glasses
   glasses -->|"onClick"| dat
   dat -->|"press"| app
@@ -72,7 +72,7 @@ preview on and autoplay pressing the button in focus every five seconds, and sav
    itself off after a firmware update.
 2. Copy `Config/Signing.example.xcconfig` to `Config/Signing.local.xcconfig` and put your Apple Developer team in it.
 3. Plug in and unlock the iPhone, then `make device DEVICE=<identifier>` (the identifier from
-   `xcrun devicectl list devices`). The first signed build registers `io.darkshift.rayban-spike` with your team.
+   `xcrun devicectl list devices`). The first signed build registers `io.darkshift.hero-goggles-ios` with your team.
 4. In the app: Connect with Meta AI, and Allow in Meta AI. Put the glasses on, unfolded: Hello shows in the right lens.
 5. Pinch Start, and press through with the Neural Band. Each press shows in the app's Presses as "glasses".
 
@@ -111,7 +111,7 @@ Pull the logs off the phone:
 
 ```bash
 xcrun devicectl device copy from --device <identifier> --domain-type appDataContainer \
-  --domain-identifier io.darkshift.rayban-spike --source Documents --destination <folder>
+  --domain-identifier io.darkshift.hero-goggles-ios --source Documents --destination <folder>
 ```
 
 **Check arguments:** `-seek.start YES` starts seeking at launch, and `-seek.simulate YES` seeks a made-up beacon that
@@ -130,11 +130,11 @@ make verify` fetches the public package over HTTPS.
 
 | Path | What it holds |
 |---|---|
-| `App/SpikeApp.swift` | The app: starts the toolkit, sends the newest glance, handles Meta AI's callback, the check arguments |
+| `App/HeroGogglesApp.swift` | The app: starts the toolkit, sends the newest glance, handles Meta AI's callback, the check arguments |
 | `App/Glasses.swift` | The toolkit: registration, the glasses, the device session and its display, one send at a time, the preview |
 | `App/GlassesCard.swift` | A glance in the toolkit's views (`FlexBox`, `Text`, `ButtonGroup`, `Button`) |
 | `App/Glance.swift` | A glance, and the demo's five screens |
-| `App/SpikeView.swift` | The phone's screen |
+| `App/HeroGogglesView.swift` | The phone's screen |
 | `App/BeaconLink.swift` | The beacon over Bluetooth: scan, connect, Qorvo's service, its messages |
 | `App/Seeker.swift` | Seeking: Nearby Interaction's session, the readings, the words for the lens and the voice, the alerts |
 | `App/SeekView.swift` | Seeking on the phone: the arrow, the distance, the switches, what Bluetooth and Nearby Interaction say |
