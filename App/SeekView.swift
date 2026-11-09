@@ -45,6 +45,12 @@ struct SeekView: View {
                 Toggle("Hot and cold beeps", isOn: $seeker.beeps)
                 Toggle("Show it on the glasses", isOn: $seeker.showsOnGlasses)
                 Toggle("Send to Influence", isOn: $influence.enabled)
+                LabeledContent("Seeker") {
+                    TextField(influence.seekerID, text: $influence.seeker)
+                        .multilineTextAlignment(.trailing)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                }
                 Toggle("Alert when \(seeker.name) goes too far", isOn: $seeker.separationAlert)
                 if seeker.separationAlert {
                     Stepper("Farther than \(Int(seeker.alertBeyond)) m", value: $seeker.alertBeyond, in: 2...50, step: 1)

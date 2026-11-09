@@ -6,26 +6,34 @@ import os
 /// The seek's link to the Influence API (`https://influence-api.darkshift.cloud`, KubeCon NA 2026's hackathon): who the
 /// phone is to find, and every reading on its way to the live map.
 ///
-/// While the app is in front it asks every two seconds whom seeker `phone` targets (`GET /api/target?seeker=phone`).
-/// The seek takes the name ("Kunal Finder" on every screen, "Finding Kunal" aloud) and prefers the target's beacon when
-/// the registry knows its Bluetooth name (`hardwareId`). Each reading with a distance goes to `POST /api/readings`, two a
-/// second at most, one at a time, dropped when it cannot go: the seek never waits on the network. The phone's position
-/// and compass heading go with it when Core Location has them, and the position to `POST /api/seekers/phone`.
+/// While the app is in front it asks every two seconds whom this person's seeker targets
+/// (`GET /api/target?seeker=<id>`). The seek takes the name ("Kunal Finder" on every screen, "Finding Kunal" aloud) and
+/// the target's beacon (`hardwareId`). Each reading with a distance goes to `POST /api/readings`, two a second at most,
+/// one at a time, dropped when it cannot go: the seek never waits on the network. The phone's position and compass
+/// heading go with it when Core Location has them, and the position to `POST /api/seekers/<id>`.
+///
+/// The seeker id is per person, a setting with no sign-up: the seek screen's Seeker field, or `-influence.seeker <id>`
+/// at launch. A phone that was never given one makes its own, `seeker-` and six random characters, and keeps it.
 ///
 /// On by default. Check arguments: `-influence.enabled NO` turns it off (as does the seek screen's switch, which is
 /// kept), and `-influence.api <url>` points it at another server.
 @MainActor
 @Observable
 final class InfluenceLink: NSObject {
-    /// Whom seeker `phone` targets: the influencer's name, and the beacon's Bluetooth name or identifier when the
-    /// registry has one.
+    /// Whom this person's seeker targets: the influencer's name, and their beacon's ID when the registry has one.
     struct Target: Equatable {
         let name: String
         let hardwareID: String?
     }
 
     static let defaultServer = URL(string: "https://influence-api.darkshift.cloud")!
-    static let seekerID = "phone"
+    /// Who seeks with this phone, as typed: the seek screen's Seeker field. Kept in the app's settings.
+    var seeker: String {
+        didSet { UserDefaults.standard.set(seeker, forKey: "influence.seeker") }
+    }
+    /// `seeker` as the API keeps it (influence-api's `slug`); the phone's own id while the field is empty.
+    var seekerID: String { Self.slug(seeker) ?? ownSeeker }
+    @ObservationIgnored private let ownSeeker: String
     /// Two posts a second at most.
     private static let spacing: TimeInterval = 0.5
 
@@ -66,6 +74,10 @@ final class InfluenceLink: NSObject {
         let defaults = UserDefaults.standard
         defaults.register(defaults: ["influence.enabled": true])
         enabled = defaults.bool(forKey: "influence.enabled")
+        let own = defaults.string(forKey: "influence.ownSeeker") ?? "seeker-" + UUID().uuidString.prefix(6).lowercased()
+        defaults.set(own, forKey: "influence.ownSeeker")
+        ownSeeker = own
+        seeker = defaults.string(forKey: "influence.seeker") ?? own
         let given = defaults.string(forKey: "influence.api").flatMap { URL(string: $0) }
         server = given.flatMap { $0.scheme != nil && $0.host != nil ? $0 : nil } ?? Self.defaultServer
         let configuration = URLSessionConfiguration.ephemeral
@@ -111,7 +123,7 @@ final class InfluenceLink: NSObject {
     /// keeps the last target, so a hiccup does not flip the title.
     private func poll() async {
         let url = server.appending(path: "api/target")
-            .appending(queryItems: [URLQueryItem(name: "seeker", value: Self.seekerID)])
+            .appending(queryItems: [URLQueryItem(name: "seeker", value: seekerID)])
         var request = URLRequest(url: url)
         request.cachePolicy = .reloadIgnoringLocalCacheData
         do {
@@ -143,7 +155,7 @@ final class InfluenceLink: NSObject {
     func send(_ reading: Seeker.Reading) {
         guard enabled, !posting, Date.now.timeIntervalSince(lastPost) >= Self.spacing else { return }
         var body: [String: Any] = [
-            "seekerId": Self.seekerID,
+            "seekerId": seekerID,
             "distance": Self.round(Double(reading.distance), 3),
             "trend": Self.words(reading.trend),
         ]
@@ -177,7 +189,7 @@ final class InfluenceLink: NSObject {
             "accuracy": Self.round(fix.horizontalAccuracy, 1),
         ]
         if let heading { body["heading"] = Self.round(heading, 1) }
-        guard let request = post("api/seekers/\(Self.seekerID)", body) else { return }
+        guard let request = post("api/seekers/\(seekerID)", body) else { return }
         Task { [session] in _ = try? await session.data(for: request) }
     }
 
@@ -197,13 +209,21 @@ final class InfluenceLink: NSObject {
         return request
     }
 
-    /// One line for the phone: "Influence: Kunal · sent 3 s ago", or "Influence: offline".
+    /// One line for the phone: "Influence (jo): Kunal · sent 3 s ago", or "Influence (jo): offline".
     func words(at now: Date) -> String {
         guard enabled else { return "Influence: off" }
-        if reachable == false { return "Influence: offline" }
+        let head = "Influence (\(seekerID))"
+        if reachable == false { return "\(head): offline" }
         let who = target?.name ?? (reachable == nil ? "connecting…" : "nobody targeted")
-        guard let lastSent else { return "Influence: \(who)" }
-        return "Influence: \(who) · sent \(max(0, Int(now.timeIntervalSince(lastSent)))) s ago"
+        guard let lastSent else { return "\(head): \(who)" }
+        return "\(head): \(who) · sent \(max(0, Int(now.timeIntervalSince(lastSent)))) s ago"
+    }
+
+    /// As influence-api's `slug`: lower case, each run of anything but a letter or digit one hyphen, 40 at most.
+    static func slug(_ text: String) -> String? {
+        let words = text.lowercased().split { !($0.isASCII && ($0.isLetter || $0.isNumber)) }
+        let id = String(words.joined(separator: "-").prefix(40))
+        return id.isEmpty ? nil : id
     }
 
     private static func words(_ trend: Seeker.Trend) -> String {
