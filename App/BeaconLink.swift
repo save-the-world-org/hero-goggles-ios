@@ -71,6 +71,11 @@ final class BeaconLink: NSObject {
     /// The beacon went away; the link looks for it again.
     @ObservationIgnored var onLost: (@MainActor () -> Void)?
 
+    /// A beacon to take first, by its advertised name or its peripheral identifier: the Influence API's `hardwareId`
+    /// for the target (`Seeker.find`). Another beacon is taken only after three seconds without it.
+    @ObservationIgnored var preferred: String?
+    @ObservationIgnored private var fallback: (peripheral: CBPeripheral, name: String?, rssi: Int)?
+
     @ObservationIgnored private var central: CBCentralManager?
     @ObservationIgnored private var peripheral: CBPeripheral?
     @ObservationIgnored private var rx: CBCharacteristic?
@@ -123,6 +128,7 @@ final class BeaconLink: NSObject {
     }
 
     private func forget() {
+        fallback = nil
         peripheral = nil
         rx = nil
         tx = nil
@@ -159,14 +165,39 @@ extension BeaconLink: @preconcurrency CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name
-        guard self.peripheral == nil, isBeacon(advertisementData, name: name) else { return }
+        let isPreferred = preferred.map { wanted in
+            [name, peripheral.identifier.uuidString].contains { $0?.caseInsensitiveCompare(wanted) == .orderedSame }
+        } ?? false
+        guard self.peripheral == nil, isPreferred || isBeacon(advertisementData, name: name) else { return }
+        if preferred != nil, !isPreferred {
+            // Not the target's beacon: kept, and taken if the target's does not show within three seconds.
+            if fallback == nil {
+                fallback = (peripheral, name, RSSI.intValue)
+                Task { [weak self] in
+                    try? await Task.sleep(for: .seconds(3))
+                    self?.takeFallback()
+                }
+            }
+            return
+        }
+        take(peripheral, name: name, rssi: RSSI.intValue)
+    }
+
+    private func takeFallback() {
+        guard wanted, peripheral == nil, let fallback else { return }
+        take(fallback.peripheral, name: fallback.name, rssi: fallback.rssi)
+    }
+
+    private func take(_ peripheral: CBPeripheral, name: String?, rssi: Int) {
+        guard let central else { return }
         central.stopScan()
+        fallback = nil
         self.name = name ?? "Beacon"
-        rssi = RSSI.intValue
+        self.rssi = rssi
         self.peripheral = peripheral
         peripheral.delegate = self
         state = .connecting(self.name ?? "Beacon")
-        Self.log.info("found \(self.name ?? "-", privacy: .public) at \(RSSI.intValue) dBm")
+        Self.log.info("found \(self.name ?? "-", privacy: .public) at \(rssi) dBm")
         central.connect(peripheral)
     }
 
