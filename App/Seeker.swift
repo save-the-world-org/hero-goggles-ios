@@ -167,7 +167,11 @@ final class Seeker: NSObject {
         let next = who ?? Self.defaultName
         guard next != name else { return }
         name = next
-        guard who != nil else { return }
+        guard who != nil else {
+            // Nobody targeted: no beacon to range, so back to the Hero Finder screen.
+            if active, !simulated { stop() }
+            return
+        }
         if !active { start() }
         if speaks { voice.say(Voice.Line(key: "finding \(next)", words: "Finding \(next).", urgent: true)) }
     }
@@ -431,7 +435,7 @@ final class Seeker: NSObject {
         case .off: return "Not seeking"
         case .looking:
             if case .connecting = link.state { return "Connecting to the beacon…" }
-            return "Looking for the beacon…"
+            return link.preferred == nil ? "Waiting for a target…" : "Looking for the beacon…"
         case .starting: return "Starting UWB…"
         case .lost: return lastSeen.map { "Lost \(name). \(Self.lastSeenWords($0))" } ?? "Lost the signal"
         case .unavailable(let why): return why
@@ -475,7 +479,7 @@ final class Seeker: NSObject {
         switch link.state {
         case .off: return "Off, or not allowed"
         case .idle: return "Not looking"
-        case .scanning: return "Looking for the beacon"
+        case .scanning: return link.preferred == nil ? "Waiting for a target" : "Looking for the beacon"
         case .connecting(let name): return "Connecting to \(name)"
         case .connected(let name): return "Connected to \(name)"
         }
