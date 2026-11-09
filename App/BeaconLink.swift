@@ -71,8 +71,9 @@ final class BeaconLink: NSObject {
     /// The beacon went away; the link looks for it again.
     @ObservationIgnored var onLost: (@MainActor () -> Void)?
 
-    /// A beacon to take first, by its advertised name or its peripheral identifier: the Influence API's `hardwareId`
-    /// for the target (`Seeker.find`). Another beacon is taken only after three seconds without it.
+    /// The beacon to take, by its ID: the 8 hex digits of its DEVICEADDR[0], which it advertises inside its name, "Hero
+    /// Finder (86E7C53A)" on our firmware and "DWM3001CDK (86E7C53A)" on Qorvo's. The Influence API's `hardwareId` for
+    /// the target (`Seeker.find`). Another beacon is taken only after three seconds without it.
     @ObservationIgnored var preferred: String?
     @ObservationIgnored private var fallback: (peripheral: CBPeripheral, name: String?, rssi: Int)?
 
@@ -123,8 +124,16 @@ final class BeaconLink: NSObject {
     private func scan() {
         guard wanted, let central, central.state == .poweredOn, peripheral == nil else { return }
         state = .scanning
-        // No service filter: a beacon that does not advertise its service is still found by name.
-        central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+        // No service filter: a beacon that does not advertise its service is still found by name. Every advert, so a
+        // name that comes only in a later scan response is still matched to the target's ID.
+        central.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: true])
+    }
+
+    /// A beacon's ID, upper case, from its advertised name or the API's `hardwareId`: the whole text when it is 8 hex
+    /// digits, else the last run of 8 in it ("Hero Finder (86E7C53A)" and "DWM3001CDK (86E7C53A)" are both 86E7C53A).
+    static func beaconID(_ text: String?) -> String? {
+        guard let text else { return nil }
+        return text.matches(of: /[0-9A-Fa-f]{8}/).last.map { String($0.output).uppercased() }
     }
 
     private func forget() {
@@ -165,9 +174,7 @@ extension BeaconLink: @preconcurrency CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name
-        let isPreferred = preferred.map { wanted in
-            [name, peripheral.identifier.uuidString].contains { $0?.caseInsensitiveCompare(wanted) == .orderedSame }
-        } ?? false
+        let isPreferred = preferred != nil && Self.beaconID(name) == preferred
         guard self.peripheral == nil, isPreferred || isBeacon(advertisementData, name: name) else { return }
         if preferred != nil, !isPreferred {
             // Not the target's beacon: kept, and taken if the target's does not show within three seconds.

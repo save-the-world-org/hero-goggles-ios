@@ -152,10 +152,10 @@ final class Seeker: NSObject {
     }
 
     /// Whom to find, from the Influence API (`InfluenceLink`): every screen's title becomes "<Name> Finder", the voice
-    /// says "Finding <Name>", and seeking starts if it was off. The beacon, a Bluetooth name or identifier, is taken
-    /// first when it is found. Nobody goes back to Hero. Ranging, the alerts and the lens go on as they were.
+    /// says "Finding <Name>", and seeking starts if it was off. The beacon is the one whose 8-hex ID matches the
+    /// target's `hardwareId`. Nobody goes back to Hero. Ranging, the alerts and the lens go on as they were.
     func find(_ who: String?, beacon: String? = nil) {
-        link.preferred = beacon
+        link.preferred = BeaconLink.beaconID(beacon)
         let next = who ?? Self.defaultName
         guard next != name else { return }
         name = next
