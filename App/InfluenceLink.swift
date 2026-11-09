@@ -77,7 +77,10 @@ final class InfluenceLink: NSObject {
         let own = defaults.string(forKey: "influence.ownSeeker") ?? "seeker-" + UUID().uuidString.prefix(6).lowercased()
         defaults.set(own, forKey: "influence.ownSeeker")
         ownSeeker = own
-        seeker = defaults.string(forKey: "influence.seeker") ?? own
+        // Saved, so an id given at launch (-influence.seeker <id>) stays for the launches after it.
+        let startingSeeker = defaults.string(forKey: "influence.seeker") ?? own
+        defaults.set(startingSeeker, forKey: "influence.seeker")
+        seeker = startingSeeker
         let given = defaults.string(forKey: "influence.api").flatMap { URL(string: $0) }
         server = given.flatMap { $0.scheme != nil && $0.host != nil ? $0 : nil } ?? Self.defaultServer
         let configuration = URLSessionConfiguration.ephemeral
