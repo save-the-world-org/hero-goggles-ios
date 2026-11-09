@@ -34,11 +34,13 @@ targets:
     sources:
       - path: App
     dependencies:
-      # The toolkit, the glasses' display, and simulated glasses for the preview on the phone.
+      # The toolkit, the glasses' display and camera ("Share what I see"), and simulated glasses for the preview.
       - package: MetaWearablesDAT
         product: MWDATCore
       - package: MetaWearablesDAT
         product: MWDATDisplay
+      - package: MetaWearablesDAT
+        product: MWDATCamera
       - package: MetaWearablesDAT
         product: MWDATMockDevice
     settings:

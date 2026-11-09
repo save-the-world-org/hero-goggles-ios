@@ -6,6 +6,7 @@ import simd
 struct SeekView: View {
     @Bindable var seeker: Seeker
     @Bindable var influence: InfluenceLink
+    @Bindable var share: FrameShare
 
     var body: some View {
         List {
@@ -57,6 +58,12 @@ struct SeekView: View {
                 }
             } footer: {
                 Text("An iPhone gives a beacon's direction only with camera assistance: hold the phone upright, camera facing forward, and sweep it slowly. Distance works without it. The beeps quicken as you get closer, high while closing in, low while drifting apart.")
+            }
+            Section {
+                Toggle("Share what I see", isOn: $share.enabled)
+                ShareLine(share: share)
+            } footer: {
+                Text("Sends what your glasses' camera sees to Influence, about two small pictures a second, for the audience's screen. The capture light on the front of your glasses shows while it shares, so people near you know. It starts only when you turn it on, and stops when you turn it off, leave the app, or your glasses disconnect.")
             }
             Section("The beacon") {
                 LabeledContent("Bluetooth", value: seeker.linkWords)
@@ -121,6 +128,19 @@ struct SeekView: View {
 
     private func vector(_ value: simd_float3) -> String {
         String(format: "%.2f, %.2f, %.2f", Double(value.x), Double(value.y), Double(value.z))
+    }
+}
+
+/// Sharing what the glasses see, in one small line ticking twice a second: "Sharing: 2 fps, last sent 0.4 s ago".
+struct ShareLine: View {
+    let share: FrameShare
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.5)) { context in
+            Text(share.words(at: context.date))
+                .font(.caption)
+                .foregroundStyle(share.problem == nil ? Color.secondary : Color.red)
+        }
     }
 }
 

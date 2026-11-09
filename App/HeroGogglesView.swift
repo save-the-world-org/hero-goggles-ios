@@ -8,6 +8,7 @@ struct HeroGogglesView: View {
     let demo: Demo
     let seeker: Seeker
     let influence: InfluenceLink
+    let share: FrameShare
     @State private var preview = false
     /// The screens pushed over this one: the seeking's, opened by itself whenever seeking starts.
     @State private var path: [Route] = []
@@ -111,7 +112,7 @@ struct HeroGogglesView: View {
                 }
             }
             .navigationTitle("Hero Goggles")
-            .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker, influence: influence) }
+            .navigationDestination(for: Route.self) { _ in SeekView(seeker: seeker, influence: influence, share: share) }
         }
         .onChange(of: seeker.active) { _, active in
             if active, path.isEmpty { path = [.seek] }
