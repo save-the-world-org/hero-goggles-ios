@@ -4,7 +4,7 @@ What an iPhone app can do with [Meta Ray-Ban Display](https://www.meta.com/ai-gl
 through Meta's [Wearables Device Access Toolkit](https://github.com/facebook/meta-wearables-dat-ios) 1.0.1: draw on
 the glasses' display, and take presses from the Neural Band. A small app, with nothing of Infrared in it, that runs on a
 simulator with Meta's simulated glasses or on an iPhone with a real pair. Since 2026-11-08 it also seeks a UWB beacon,
-"Kelsey Finder": the distance and the way to it on the phone and in the lens ([Seek a UWB beacon](#seek-a-uwb-beacon)).
+"Hero Finder": the distance and the way to it on the phone and in the lens ([Seek a UWB beacon](#seek-a-uwb-beacon)).
 
 Infrared's own use of the glasses, its planning session at a glance in the lens, is darkshiftio/localred's iPhone app
 (`app/Mobile/Glasses`, and `docs/app.md`, "Glasses"). This spike's handling of the toolkit is adapted from it.
@@ -83,13 +83,13 @@ Once registered, the app is listed in Meta AI under Settings, App connections, D
 The app finds a UWB beacon over Bluetooth, then measures the way to it with Apple's Nearby Interaction, and says and
 shows it: on the phone, in the glasses' lens, and in their speakers. The beacon is a Qorvo DWM3001CDK board on Qorvo's
 Nearby Interaction firmware (QANI); save-the-world-org/beacon-firmware has the board, its firmware and the tools to flash it,
-and infrared-docs-internal's `docs/beacons/` the pages for people. The beacon is "Kelsey"; every screen of it is titled
-"Kelsey Finder" (`Seeker.name`).
+and infrared-docs-internal's `docs/beacons/` the pages for people. Whom it finds comes from save-the-world-org's Influence API
+(`App/InfluenceLink.swift`): its target names every screen, "<Name> Finder"; with no target it is "Hero Finder".
 
 **You need** an iPhone with Apple's UWB chip (the seek screen's This iPhone says Precise distance: Yes), a beacon on
 QANI within Bluetooth range, and the glasses for the lens. Close Qorvo's own iPhone app first: QANI takes one connection at a time.
 
-**Start it** from the first row of the phone's screen, Kelsey Finder, or by pinching Find on the lens ("Find Kelsey").
+**Start it** from the first row of the phone's screen, Hero Finder, or by pinching Find on the lens ("Find Hero").
 It then:
 
 1. scans for the beacon over Bluetooth, by Qorvo's service (QNIS) or its name, and connects;
@@ -101,10 +101,10 @@ It then:
 |---|---|
 | Distance | Every reading: centimetres in fives under a metre, tenths of a metre above. Spoken in whole metres from 5 m, tenths from 1 to 5 m, tens of centimetres under 1 m. "You're there" within 0.4 m |
 | Direction | Only with camera assistance on (Direction, with the camera): hold the phone up, camera forward, and sweep it slowly. An arrow on the phone and in the lens. iPhones give a third-party beacon no direction without the camera |
-| Who moves | The phone's motion (Core Motion) says whether you are walking: the distance growing while you stand still is "Kelsey is moving away"; shrinking, "Kelsey is coming closer"; growing while you walk with no arrow, "Wrong way: turn around" |
+| Who moves | The phone's motion (Core Motion) says whether you are walking: the distance growing while you stand still is "Hero is moving away"; shrinking, "Hero is coming closer"; growing while you walk with no arrow, "Wrong way: turn around" |
 | Hot and cold | A short beep through the glasses' speakers, faster as you get closer: high while closing in, low while drifting apart, middle while steady |
-| Too far | Past 10 m (a stepper, 2 to 50): the lens's line starts "Past 10 m", the voice says "Kelsey is past 10 meters", and the phone buzzes, once until he comes back inside |
-| Lost | If the signal drops, "Lost Kelsey. Last seen 8.2 m, slightly left, at 18:42" on the lens, and said once |
+| Too far | Past 10 m (a stepper, 2 to 50): the lens's line starts "Past 10 m", the voice says "Hero is past 10 meters", and the phone buzzes, once until he comes back inside |
+| Lost | If the signal drops, "Lost Hero. Last seen 8.2 m, slightly left, at 18:42" on the lens, and said once |
 | The log | Every reading, to a CSV file in the app's Documents, `seek-<date>-<time>.csv`: the raw distance, angle and direction vector, the arrow, the trend, whether you moved |
 
 Pull the logs off the phone:

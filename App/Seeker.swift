@@ -43,8 +43,8 @@ final class Seeker: NSObject {
     static let arrived: Float = 0.4
 
     /// Who the beacon finds while the Influence API targets nobody (`InfluenceLink`).
-    static let defaultName = "Kelsey"
-    /// Who the beacon finds, and the title on the glasses and the phone: the Influence API's target, else Kelsey.
+    static let defaultName = "Hero"
+    /// Who the beacon finds, and the title on the glasses and the phone: the Influence API's target, else Hero.
     private(set) var name = Seeker.defaultName
     var title: String { "\(name) Finder" }
 
@@ -77,13 +77,13 @@ final class Seeker: NSObject {
     private(set) var updated: Date?
     private(set) var simulated = false
     /// Whether you are on the move (the phone's motion activity: walking, running, cycling), so a growing distance tells
-    /// who moves: Kelsey, while you stand still, or you, walking the wrong way. Nil until the phone has said.
+    /// who moves: the hero, while you stand still, or you, walking the wrong way. Nil until the phone has said.
     private(set) var youAreMoving: Bool?
     /// The file this session's readings go to, in the app's Documents.
     private(set) var logName: String?
-    /// Where Kelsey was when last heard, kept after the signal goes: "last seen" while he is lost.
+    /// Where the hero was when last heard, kept after the signal goes: "last seen" while they are lost.
     private(set) var lastSeen: LastSeen?
-    /// Kelsey is past `alertBeyond`: the alert has gone off, and goes off again only once he has come back inside.
+    /// The hero is past `alertBeyond`: the alert has gone off, and goes off again only once they have come back inside.
     private(set) var separated = false
 
     struct LastSeen: Equatable {
@@ -105,7 +105,7 @@ final class Seeker: NSObject {
     var beeps = true {
         didSet { beeps ? startBeeping() : stopBeeping() }
     }
-    /// An alert on the lens, aloud and in the hand when Kelsey goes farther than `alertBeyond` meters.
+    /// An alert on the lens, aloud and in the hand when the hero goes farther than `alertBeyond` meters.
     var separationAlert = true
     var alertBeyond: Float = 10
 
@@ -153,7 +153,7 @@ final class Seeker: NSObject {
 
     /// Whom to find, from the Influence API (`InfluenceLink`): every screen's title becomes "<Name> Finder", the voice
     /// says "Finding <Name>", and seeking starts if it was off. The beacon, a Bluetooth name or identifier, is taken
-    /// first when it is found. Nobody goes back to Kelsey. Ranging, the alerts and the lens go on as they were.
+    /// first when it is found. Nobody goes back to Hero. Ranging, the alerts and the lens go on as they were.
     func find(_ who: String?, beacon: String? = nil) {
         link.preferred = beacon
         let next = who ?? Self.defaultName
@@ -180,8 +180,8 @@ final class Seeker: NSObject {
         beeper.stop()
     }
 
-    /// One beep for where Kelsey is now, and the milliseconds to the next: two seconds apart at 20 m, quicker as he
-    /// comes closer, eight a second once there. High while he comes closer, low while he gets farther.
+    /// One beep for where the hero is now, and the milliseconds to the next: two seconds apart at 20 m, quicker as they
+    /// come closer, eight a second once there. High while they come closer, low while they get farther.
     private func beepOnce() -> Int {
         guard phase == .ranging, let distance else { return 400 }
         let frequency = switch trend {
@@ -231,8 +231,8 @@ final class Seeker: NSObject {
         UIApplication.shared.isIdleTimerDisabled = false
     }
 
-    /// A fresh session, and the beacon asked for its UWB settings: the start, and every start again. While Kelsey is
-    /// lost, the screens stay on where he was last seen until ranging comes back.
+    /// A fresh session, and the beacon asked for its UWB settings: the start, and every start again. While the hero is
+    /// lost, the screens stay on where they were last seen until ranging comes back.
     private func begin() {
         guard active, !simulated else { return }
         makeSession()
@@ -240,7 +240,7 @@ final class Seeker: NSObject {
         link.send(.initialize)
     }
 
-    /// The signal is gone: the screens say where Kelsey was last seen, and the voice says it once.
+    /// The signal is gone: the screens say where the hero was last seen, and the voice says it once.
     private func lose() {
         guard active, phase != .lost else { return }
         guard let lastSeen else {
@@ -507,7 +507,7 @@ final class Seeker: NSObject {
         }
     }
 
-    /// Who moves, when the distance changes: Kelsey, while you stand still; you, walking the wrong way.
+    /// Who moves, when the distance changes: the hero, while you stand still; you, walking the wrong way.
     var motion: String? {
         guard phase == .ranging, let youAreMoving else { return nil }
         switch (trend, youAreMoving) {

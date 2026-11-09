@@ -53,3 +53,16 @@ default calibration after a chip erase (beacon-firmware `docs/qani.md`). `docs/f
 **Next.** jarededwards's test away from the Mac, the beacon on a power bank: past 10 m for the alert, standing still
 while the beacon moves, out of range for Lost, and a measured 1 m and 3 m held for a few seconds each. Then pull the
 logs (`README.md`, Seek a UWB beacon) and correct the distance, in the app or by calibrating the beacon.
+
+## 2026-11-09: moved to save-the-world-org; Hero Finder
+
+**Done.** At jarededwards's word the repo moved from darkshiftio to the GitHub org save-the-world-org, where project work
+goes. The seek's title and the person's placeholder name are generic, "Hero Finder" and "Hero" (`Seeker.name`), at the
+owner's preference for a generic name now that the org may be public.
+
+The fallback name is "Hero" since pull request #1 (`f57746a`), which takes whom to find from the Influence API's
+target and posts every reading to it.
+
+**Next.** Register people and beacons and join them, so each seeker finds their own beacon: today the API's target is
+one per seeker (`seeker=phone`), and the beacon is the first one found. Integrate with hero-goggles (johndietz's, in
+flight).
