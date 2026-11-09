@@ -52,9 +52,6 @@ final class BeaconLink: NSObject {
                 tx: CBUUID(string: "6E400003-B5A3-F393-E0A9-E50E24DCCA9E")),
     ]
 
-    /// Advertised names that mark a Qorvo beacon even when it does not advertise its service.
-    private static let names = ["qorvo", "dwm3001", "qani", "qni"]
-
     private(set) var state: State = .idle
     private(set) var problem: String?
     /// The beacon's advertised name, and its signal when it was found.
@@ -75,11 +72,10 @@ final class BeaconLink: NSObject {
 
     /// The beacon to take, by its ID: the 8 hex digits of its DEVICEADDR[0], which it advertises inside its name, "Hero
     /// Finder (86E7C53A)" on our firmware and "DWM3001CDK (86E7C53A)" on Qorvo's. The Influence API's `hardwareId` for
-    /// the target (`Seeker.find`). Another beacon is taken only after three seconds without it. A change scans again.
+    /// the target (`Seeker.find`). No other beacon is ever taken; with no target, none is. A change scans again.
     @ObservationIgnored var preferred: String? {
         didSet { if preferred != oldValue { retarget() } }
     }
-    @ObservationIgnored private var fallback: (peripheral: CBPeripheral, name: String?, rssi: Int)?
 
     @ObservationIgnored private var central: CBCentralManager?
     @ObservationIgnored private var peripheral: CBPeripheral?
@@ -89,7 +85,7 @@ final class BeaconLink: NSObject {
 
     private static let log = Logger(subsystem: "io.darkshift.rayban-spike", category: "beacon")
 
-    /// Looks for a beacon and connects to the first one found, then keeps it: found again whenever it goes.
+    /// Looks for the target's beacon and connects to it, then keeps it: found again whenever it goes.
     func start() {
         wanted = true
         problem = nil
@@ -149,27 +145,17 @@ final class BeaconLink: NSObject {
             Self.log.info("target changed, letting go of \(self.name ?? "-", privacy: .public)")
             central.cancelPeripheralConnection(peripheral)
         } else {
-            fallback = nil
             central.stopScan()
             scan()
         }
     }
 
     private func forget() {
-        fallback = nil
         peripheral = nil
         rx = nil
         tx = nil
         serviceName = nil
         connectedID = nil
-    }
-
-    private func isBeacon(_ advertisement: [String: Any], name: String?) -> Bool {
-        let advertised = (advertisement[CBAdvertisementDataServiceUUIDsKey] as? [CBUUID] ?? [])
-            + (advertisement[CBAdvertisementDataOverflowServiceUUIDsKey] as? [CBUUID] ?? [])
-        if advertised.contains(where: { uuid in Self.services.contains { $0.id == uuid } }) { return true }
-        guard let name = name?.lowercased() else { return false }
-        return Self.names.contains { name.contains($0) }
     }
 }
 
@@ -194,31 +180,14 @@ extension BeaconLink: @preconcurrency CBCentralManagerDelegate {
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any], rssi RSSI: NSNumber) {
         let name = advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? peripheral.name
-        let isPreferred = preferred != nil && Self.beaconID(name) == preferred
-        guard self.peripheral == nil, isPreferred || isBeacon(advertisementData, name: name) else { return }
-        if preferred != nil, !isPreferred {
-            // Not the target's beacon: kept, and taken if the target's does not show within three seconds.
-            if fallback == nil {
-                fallback = (peripheral, name, RSSI.intValue)
-                Task { [weak self] in
-                    try? await Task.sleep(for: .seconds(3))
-                    self?.takeFallback()
-                }
-            }
-            return
-        }
+        // Only the target's beacon, by its ID: no fallback to another, and with no target, none.
+        guard self.peripheral == nil, let preferred, Self.beaconID(name) == preferred else { return }
         take(peripheral, name: name, rssi: RSSI.intValue)
-    }
-
-    private func takeFallback() {
-        guard wanted, peripheral == nil, let fallback else { return }
-        take(fallback.peripheral, name: fallback.name, rssi: fallback.rssi)
     }
 
     private func take(_ peripheral: CBPeripheral, name: String?, rssi: Int) {
         guard let central else { return }
         central.stopScan()
-        fallback = nil
         self.name = name ?? "Beacon"
         self.rssi = rssi
         self.peripheral = peripheral
