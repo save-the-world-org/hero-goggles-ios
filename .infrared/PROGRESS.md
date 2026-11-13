@@ -85,3 +85,12 @@ quiet at about 13:50: some power banks switch off at a board's low draw.
 
 **Next.** 0.2: zones and floors (a Bluetooth tag per hero and a listener per floor), Bluetooth at +8 dBm and
 advertising while connected (the beacon firmware build), and the calibration offset per board.
+
+## 2026-11-13: the agent harness, at template 0.4.0
+
+**Done.** Synced to harness-template 0.4.0 (`d9f3423`), which gives the harness Infrared's names: `sync` moved the CLI
+to `.infrared/bin/infrared-harness.mjs`, removed `bb-harness.mjs` and updated the session-start hook and the scripts.
+`make harness`, `scripts/verify`, `AGENTS.md` and the manifest's `$comment` name the new CLI. `make verify` passed.
+The app is unchanged.
+
+**Next.** As before: 0.2's zones and floors, the beacon firmware build and the calibration offset per board.

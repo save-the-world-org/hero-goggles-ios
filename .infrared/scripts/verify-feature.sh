@@ -18,7 +18,7 @@ FEATURE="${1:-}"
 
 HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$(dirname "$HARNESS")"
-CLI="$HARNESS/bin/bb-harness.mjs"
+CLI="$HARNESS/bin/infrared-harness.mjs"
 MANIFEST="$HARNESS/harness.json"
 
 # Exit 3 from `path` is an answer, not an error: the manifest keeps no feature
@@ -80,8 +80,9 @@ done
 # so a later reader can tell a verified feature from a remembered one.
 #
 # The state goes under the name the list already uses. A list that says
-# `status` (backlog-burner's does) used to get `state` written beside it, so a
-# verified feature carried both keys and the stale one stayed in the file.
+# `status` (one kept before the harness may) used to get `state` written
+# beside it, so a verified feature carried both keys and the stale one stayed
+# in the file.
 node -e '
   const fs=require("fs");
   const [file,id,log]=process.argv.slice(1);

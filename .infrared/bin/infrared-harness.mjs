@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * bb-harness: the manifest-driven harness CLI.
+ * infrared-harness: the manifest-driven harness CLI.
  *
  * The upstream harness tooling (walkinglabs/learn-harness-engineering,
  * tools/audit-harness.sh) hardcodes every path it checks: PROGRESS.md at the
@@ -9,28 +9,27 @@
  * own, and we run npm scripts, not make.
  *
  * So paths are DATA, in the manifest (harness.json, in the harness directory),
- * and this is the only thing that reads them. CI asks `bb-harness path
+ * and this is the only thing that reads them. CI asks `infrared-harness path
  * progress` rather than knowing where PROGRESS.md lives. Moving a file is a
  * one-line change to the manifest and nothing else.
  *
  * THE HARNESS DIRECTORY IS FOUND, NOT NAMED. It is the one top-level entry of
  * the repository whose name starts with a dot (never .git), that is a
  * directory, and that holds a harness.json parsing to an object with a numeric
- * `harness`. One organisation's repositories call it one thing and another's
- * something else, so nothing that ships into a repository writes the name
- * down: this finds it, the scripts locate themselves, and the hooks apply the
- * same rule. The manifest's `root` says the same name, and `validate` holds it
+ * `harness`. A repository may call it what it likes, so nothing that ships
+ * into a repository writes the name down: this finds it, the scripts locate
+ * themselves, and the hooks apply the same rule. The manifest's `root` says the same name, and `validate` holds it
  * to that.
  *
  * Zero dependencies, on purpose: this runs in a scaffolded repo before
  * anything is installed.
  *
- *   bb-harness init     [--target DIR] [--product NAME] [--root .NAME]
- *   bb-harness sync     [--target DIR] [--from CHECKOUT] [--dry-run] [--adopt] [--force]
- *   bb-harness path     <key>                   one path; exit 3 when the manifest keeps none
- *   bb-harness validate [--target DIR] [--json] the gate; exit 1 on any failure
- *   bb-harness tailored [--target DIR] [--json] has this repo been made about its business?
- *   bb-harness vcr      [--target DIR]          passing / activated, the completion ratio
+ *   infrared-harness init     [--target DIR] [--product NAME] [--root .NAME]
+ *   infrared-harness sync     [--target DIR] [--from CHECKOUT] [--dry-run] [--adopt] [--force]
+ *   infrared-harness path     <key>                   one path; exit 3 when the manifest keeps none
+ *   infrared-harness validate [--target DIR] [--json] the gate; exit 1 on any failure
+ *   infrared-harness tailored [--target DIR] [--json] has this repo been made about its business?
+ *   infrared-harness vcr      [--target DIR]          passing / activated, the completion ratio
  */
 
 import process from 'node:process'
@@ -58,6 +57,13 @@ const MANIFEST = 'harness.json'
 const DELIVERY_MODES = ['pull-request', 'trunk']
 /** `path`'s exit status for a key the manifest does not keep: an answer, not an error. */
 const NOT_KEPT = 3
+/**
+ * The keys whose place is the template's layout, not the manifest's: a script
+ * finds the harness as the directory above its own, and runs the CLI at bin/
+ * in it. `validate` refuses a manifest that moves either; `sync` puts each
+ * where the template has it.
+ */
+const LAYOUT = ['cli', 'scripts']
 
 const argv = process.argv.slice(2)
 const cmd = argv[0]
@@ -101,7 +107,7 @@ const because = (error) => `${error.code}: ${String(error.message).replace(/^\w+
  * `process.exitCode` and unwinding lets Node drain and then exit.
  */
 class Abort extends Error {}
-function die(msg) { process.stderr.write(`bb-harness: ${msg}\n`); process.exitCode = 2; throw new Abort(msg) }
+function die(msg) { process.stderr.write(`infrared-harness: ${msg}\n`); process.exitCode = 2; throw new Abort(msg) }
 
 /* ── finding the harness ────────────────────────────────────────────────── */
 
@@ -155,7 +161,7 @@ function discover(dir) {
       '  keep one: every tool finds the harness by looking for it, and two is a question none of them can answer')
   }
   die(`no harness manifest under ${shown(dir)}${near.map((n) => `\n  ${n}`).join('')}\n` +
-    `  run: node <harness-template checkout>/bin/bb-harness.mjs init --target ${shown(dir)}`)
+    `  run: node <harness-template checkout>/bin/infrared-harness.mjs init --target ${shown(dir)}`)
 }
 
 /** The target's harness: its manifest, its directory's name, and the manifest's path. */
@@ -186,11 +192,11 @@ const skip = (id, msg) => skipped.push({ id, msg })
 
 function cmdPath() {
   const key = argv[1]
-  if (!key || key.startsWith('--')) die('usage: bb-harness path <key>')
+  if (!key || key.startsWith('--')) die('usage: infrared-harness path <key>')
   const { m, file } = load()
   const value = pathOf(m, key)
   if (value === undefined) {
-    process.stderr.write(`bb-harness: paths.${key} is not in ${file}: not kept here\n` +
+    process.stderr.write(`infrared-harness: paths.${key} is not in ${file}: not kept here\n` +
       `  kept: ${Object.keys(m.paths ?? {}).join(', ') || 'nothing'}\n`)
     process.exitCode = NOT_KEPT
     return
@@ -219,7 +225,7 @@ function readFeatures(m) {
   if (rel === undefined || !isFile(join(target, rel))) return null
   try {
     const raw = JSON.parse(readFileSync(join(target, rel), 'utf8'))
-    // Accept both shapes: a bare array, or { features: [...] } as backlog-burner writes it.
+    // Accept both shapes: a bare array, or { features: [...] } as the template writes it.
     const features = Array.isArray(raw) ? raw : Array.isArray(raw?.features) ? raw.features : []
     return { raw, features }
   } catch (error) {
@@ -228,10 +234,10 @@ function readFeatures(m) {
 }
 
 /**
- * A feature's state, under either name — the template writes `state`, and
- * backlog-burner's list says `status`. `readFeatures` accepts both shapes, so
- * every command asks through here: `vcr` once read `state` alone and reported
- * 0/20 over a backlog with 9 passing.
+ * A feature's state, under either name — the template writes `state`, and a
+ * list kept before the harness may say `status`. `readFeatures` accepts both
+ * shapes, so every command asks through here: `vcr` once read `state` alone
+ * and reported 0/20 over a backlog with 9 passing.
  */
 function stateOf(f) {
   return f.state ?? f.status
@@ -242,7 +248,8 @@ function stateOf(f) {
 /**
  * Put `files` ({ path, bytes, mode }, repository-relative, in the order they
  * are to land) into the target: all of them, or none, as far as one process
- * can see to it. `init` and `sync` write through this and nothing else.
+ * can see to it. `init` and `sync` write through this and nothing else. An
+ * entry `{ path, remove: true }` takes that file away instead, in its turn.
  *
  * Every file is STAGED first: written to a new file beside its destination,
  * opened exclusively so it is one this made and never a link, with any
@@ -253,18 +260,20 @@ function stateOf(f) {
  *
  * A destination this process may not write is not replaced around its
  * permission. Renaming over a read-only file succeeds, and a file somebody
- * made read-only is not one they meant to have rewritten.
+ * made read-only is not one they meant to have rewritten. Nor taken away: a
+ * removal is asked the same before anything is renamed.
  *
  * A failure while staging takes away every staged file and every directory
- * made for one: nothing was written. A failed rename takes away what had not
- * landed and lists what had. Either way it is exit 2 and one line, never a
- * stack trace, and never the exit 1 that means "refused".
+ * made for one: nothing was written. A failed rename or removal takes away
+ * what had not landed and lists what had. Either way it is exit 2 and one
+ * line, never a stack trace, and never the exit 1 that means "refused".
  */
 function land(files) {
   const made = []
   const staged = []
   const unstage = (from) => {
     for (const s of staged.slice(from)) {
+      if (s.tmp === undefined) continue
       try { unlinkSync(s.tmp) } catch { /* gone already */ }
     }
     for (const dir of [...made].reverse()) {
@@ -274,9 +283,15 @@ function land(files) {
   for (const file of files) {
     const at = join(target, file.path)
     try {
+      if (file.remove) {
+        accessSync(at, constants.W_OK)
+        accessSync(dirname(at), constants.W_OK)
+        staged.push({ path: file.path, at, remove: true })
+        continue
+      }
       makeDirs(dirname(at), made)
       if (existsSync(at)) accessSync(at, constants.W_OK)
-      const tmp = join(dirname(at), `.${basename(at)}.${randomBytes(6).toString('hex')}.bb-harness`)
+      const tmp = join(dirname(at), `.${basename(at)}.${randomBytes(6).toString('hex')}.harness-staged`)
       const fd = openSync(tmp, 'wx', 0o600)
       staged.push({ path: file.path, at, tmp })
       try {
@@ -288,18 +303,20 @@ function land(files) {
     } catch (error) {
       unstage(0)
       if (!isSystemError(error)) throw error
-      die(`could not write ${shown(at)} (${because(error)}): nothing was written`)
+      die(`could not ${file.remove ? 'remove' : 'write'} ${shown(at)} (${because(error)}): nothing was written`)
     }
   }
   for (const [i, s] of staged.entries()) {
     try {
-      renameSync(s.tmp, s.at)
+      if (s.remove) unlinkSync(s.at)
+      else renameSync(s.tmp, s.at)
     } catch (error) {
       unstage(i)
       if (!isSystemError(error)) throw error
-      for (const done of staged.slice(0, i)) out(`  landed     ${done.path}`)
-      die(`could not move ${shown(s.at)} into place (${because(error)}): ${i} of ${staged.length} landed, listed above, ` +
-        `and the rest did not, ${shown(staged.at(-1).at)} among them; settle that, then run this again`)
+      for (const done of staged.slice(0, i)) out(`  ${done.remove ? 'removed' : 'landed '}    ${done.path}`)
+      die(`could not ${s.remove ? `remove ${shown(s.at)}` : `move ${shown(s.at)} into place`} (${because(error)}): ` +
+        `${i} of ${staged.length} landed, listed above, and the rest did not, ${shown(staged.at(-1).at)} among them; ` +
+        'settle that, then run this again')
     }
   }
 }
@@ -415,7 +432,7 @@ function cmdInit() {
     const { found } = findHarness(target)
     if (found.length > 0) {
       die(`${shown(target)} already has a harness, in ${named(found.map((h) => h.name))}: init makes one, and a second is one nothing could find\n` +
-        `  to bring it up to date: node ${shown(join(CHECKOUT, 'bin', 'bb-harness.mjs'))} sync --target ${shown(target)}`)
+        `  to bring it up to date: node ${shown(join(CHECKOUT, 'bin', 'infrared-harness.mjs'))} sync --target ${shown(target)}`)
     }
     if (existsSync(join(target, root, MANIFEST))) {
       die(`${shown(join(target, root, MANIFEST))} is there and is not a harness manifest: move it aside, then init`)
@@ -495,7 +512,7 @@ function cmdInit() {
     out(`  not the template's copy, so not stamped: ${unstamped.join(', ')}\n` +
       '    sync --adopt replaces them with the template\'s, and stamps them')
   }
-  out(`  next: fill in the verify commands in ${root}/${MANIFEST}, then run node ${pathOf(m, 'cli') ?? `${root}/bin/bb-harness.mjs`} validate`)
+  out(`  next: fill in the verify commands in ${root}/${MANIFEST}, then run node ${pathOf(m, 'cli') ?? `${root}/bin/infrared-harness.mjs`} validate`)
 }
 
 /* ── sync ───────────────────────────────────────────────────────────────── */
@@ -522,7 +539,7 @@ function cmdSync() {
   if (!isDir(src)) {
     die(has('from')
       ? `${shown(checkout)} is not a harness-template checkout: it has no template/`
-      : 'this copy of bb-harness is not in a harness-template checkout, so it has nothing to sync from\n' +
+      : 'this copy of infrared-harness is not in a harness-template checkout, so it has nothing to sync from\n' +
         '  run the checkout\'s copy, or pass --from <harness-template checkout>')
   }
   const version = templateVersion(checkout)
@@ -556,6 +573,9 @@ function cmdSync() {
   }
 
   const plan = []
+  const leaving = []
+  const left = new Set()
+  const moves = []
   const notKept = []
   const taken = new Set()
   for (const key of vendor) {
@@ -567,15 +587,26 @@ function cmdSync() {
     const ours = pathOf(from.manifest, key)
     const abs = ours === undefined ? undefined : join(src, ours)
     if (abs === undefined || !existsSync(abs)) die(`the template's template.vendor names ${key}, and the template has no file for it`)
-    const base = tidy(theirs)
-    const pairs = isDir(abs) ? walk(abs).map((f) => [f, `${base}/${posixRel(abs, f)}`]) : [[abs, base]]
-    for (const [source, rel] of pairs) {
+    // Where the CLI and the scripts sit is the template's layout, not the
+    // manifest's: they go where the template has them, under this repository's
+    // harness directory, and a key the template has moved moves here too.
+    const was = tidy(theirs)
+    const base = LAYOUT.includes(key) ? underRoot(tidy(ours), from.name, root) : was
+    if (base !== was) moves.push({ key, from: was, to: base })
+    const pairs = isDir(abs) ? walk(abs).map((f) => [f, `/${posixRel(abs, f)}`]) : [[abs, '']]
+    for (const [source, sub] of pairs) {
+      const rel = `${base}${sub}`
       if (taken.has(rel)) continue
       taken.add(rel)
       plan.push(decide(source, rel, stamped[rel], options))
+      if (base === was) continue
+      left.add(`${was}${sub}`)
+      const gone = leave(`${was}${sub}`, rel, stamped[`${was}${sub}`], options)
+      if (gone !== undefined) leaving.push(gone)
     }
   }
   plan.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+  leaving.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
 
   // A vendored file git ignores is one the next commit leaves out without a
   // word: the CLI is there on the machine that ran this and nowhere else. The
@@ -594,22 +625,27 @@ function cmdSync() {
     })
   }
 
-  const dropped = Object.keys(stamped).filter((p) => !taken.has(p)).sort()
+  const dropped = Object.keys(stamped).filter((p) => !taken.has(p) && !left.has(p)).sort()
+  const all = [...plan, ...leaving]
   out(header)
-  for (const p of plan) out(`  ${p.action.padEnd(10)} ${p.path}${p.why ? `: ${p.why}` : ''}`)
+  for (const p of all) out(`  ${p.action.padEnd(10)} ${p.path}${p.why ? `: ${p.why}` : ''}`)
   for (const key of notKept) {
     out(`  not kept   paths.${key} is not in ${file}, so the template's ${from.manifest.paths?.[key] ?? key} is not installed`)
   }
   for (const p of dropped) out(`  dropped    ${p}: no longer the template's; its stamp goes, and the file stays as this repository's`)
+  for (const move of moves) {
+    out(`  moved      paths.${move.key} from ${move.from} to ${move.to}, where the template's layout has it: ` +
+      `change whatever else here names ${move.from} (a Makefile, CI, a script, AGENTS.md) in the same commit`)
+  }
   if (git.skipped) out(`  ${git.skipped}: the check for ignored paths was skipped`)
 
-  const count = (action) => plan.filter((p) => p.action === action).length
+  const count = (action) => all.filter((p) => p.action === action).length
   out(`\n  ${['added', 'updated', 'unchanged', 'refused'].map((a) => `${count(a)} ${a}`).join(', ')}` +
-    `${dropped.length > 0 ? `, ${dropped.length} dropped` : ''}`)
+    `${count('removed') > 0 ? `, ${count('removed')} removed` : ''}${dropped.length > 0 ? `, ${dropped.length} dropped` : ''}`)
   if (count('refused') > 0) {
     // Each way out once: seven files never stamped want one --adopt, not seven.
     out('  to settle the refusals:')
-    for (const fix of new Set(plan.filter((p) => p.action === 'refused').map((p) => p.fix))) out(`    ${fix}`)
+    for (const fix of new Set(all.filter((p) => p.action === 'refused').map((p) => p.fix))) out(`    ${fix}`)
     out('  nothing written: settle each refusal, then sync again')
     process.exitCode = 1
     return
@@ -619,12 +655,15 @@ function cmdSync() {
     return
   }
 
+  for (const move of moves) m.paths[move.key] = move.to
   const files = Object.fromEntries(plan.map((p) => [p.path, p.hash]))
   m.template = { ...(isObject(m.template) ? m.template : {}), version, files }
   // The stamp goes last: a sync that stops short leaves the old one, and the
-  // next finds whatever did land already the template's, so unchanged.
+  // next finds whatever did land already the template's, so unchanged. A file
+  // moved away goes just before it, once its replacement has landed.
   land([
     ...plan.filter((p) => p.action === 'added' || p.action === 'updated'),
+    ...leaving.filter((p) => p.action === 'removed'),
     { path: file, bytes: Buffer.from(`${JSON.stringify(m, null, 2)}\n`), mode: statSync(join(target, file)).mode & 0o777 },
   ])
   out(`  written, and stamped in ${file}: template ${version}`)
@@ -676,6 +715,43 @@ function decide(source, rel, recorded, { adopt, force }) {
       : refuse('edited here since it was stamped', 'move the change into harness-template, or --force to replace it')
   }
   return { ...entry, action: 'updated' }
+}
+
+/**
+ * What sync does with a copy of one of the template's files at a place the
+ * template's layout has left, now that the template's is at `to`: removed,
+ * refused and why, or undefined when nothing is there. Removed only when it
+ * is the template's by its stamp, as decide() would replace it: an edit or a
+ * missing stamp is refused, unless --force or --adopt says to take it away.
+ */
+function leave(rel, to, recorded, { adopt, force }) {
+  const entry = { path: rel, remove: true }
+  const refuse = (why, fix) => ({ ...entry, action: 'refused', why, fix })
+  const at = resolve(target, rel)
+  if (!at.startsWith(target.endsWith(sep) ? target : `${target}${sep}`)) {
+    return refuse('outside the repository', 'the manifest puts this key outside the repository: fix its path')
+  }
+  const link = linkOnPath(rel)
+  if (link !== undefined) {
+    const [what, kind] = link === rel ? ['a', 'file'] : [`${link} is a`, 'directory']
+    return refuse(`${what} symbolic link${pointsTo(link)}`,
+      `make ${link} a real ${kind}, or remove it, then sync again: sync writes nothing through a link`)
+  }
+  if (!existsSync(at)) return undefined
+  if (!isFile(at)) return refuse(`a directory here, where the template's file was until it moved to ${to}`, 'move it aside')
+  const moved = `the template's, moved to ${to}`
+  if (recorded === undefined) {
+    return adopt
+      ? { ...entry, action: 'removed', why: `${moved} (adopted)` }
+      : refuse('never stamped, so nothing says whether it was edited here',
+        '--adopt takes the template\'s copy; then read git diff for anything this repository had changed')
+  }
+  if (recorded !== digest(readFileSync(at))) {
+    return force
+      ? { ...entry, action: 'removed', why: `${moved} (forced over an edit)` }
+      : refuse('edited here since it was stamped', 'move the change into harness-template, or --force to replace it')
+  }
+  return { ...entry, action: 'removed', why: moved }
 }
 
 /**
@@ -814,7 +890,7 @@ function cmdValidate() {
   //     above its own, and runs the CLI in it at bin/: a `paths.cli` or
   //     `paths.scripts` that says otherwise names files the scripts never find.
   const layout = [
-    ['cli', `${root}/bin/bb-harness.mjs`, 'the scripts run the CLI from there', 'no CLI is kept here (paths.cli): where it sits was not checked'],
+    ['cli', `${root}/bin/infrared-harness.mjs`, 'the scripts run the CLI from there', 'no CLI is kept here (paths.cli): where it sits was not checked'],
     ['scripts', `${root}/scripts`, 'a script finds the harness as the directory above its own',
       'no scripts are kept here (paths.scripts): where they sit was not checked'],
   ]
@@ -824,7 +900,7 @@ function cmdValidate() {
       skip(`${key}-not-kept`, notKept)
     } else if (tidy(have) !== want) {
       fail('layout-moved', `paths.${key} is "${have}", not ${want}, and ${why}`,
-        `put it back at ${want}: where the CLI and the scripts sit in the harness directory is part of the template, not the manifest's to move`)
+        `put it back at ${want}, or let sync move it there: where the CLI and the scripts sit in the harness directory is part of the template, not the manifest's to move`)
     }
   }
 
@@ -993,23 +1069,23 @@ function cmdValidate() {
   const of = version ? ` (template ${version})` : ''
   if (stamp === undefined) {
     if (!isTemplate) {
-      skip('no-template-stamp', 'no template version is recorded here (template.files): the vendored files were not checked; bb-harness sync records one')
+      skip('no-template-stamp', 'no template version is recorded here (template.files): the vendored files were not checked; infrared-harness sync records one')
     }
   } else if (!isObject(stamp)) {
     fail('template-stamp-invalid', 'template.files is not an object of path -> sha256',
-      'restore it with bb-harness sync --adopt (node <harness-template checkout>/bin/bb-harness.mjs sync --adopt)')
+      'restore it with infrared-harness sync --adopt (node <harness-template checkout>/bin/infrared-harness.mjs sync --adopt)')
   } else {
     for (const [rel, want] of Object.entries(stamp).sort(([a], [b]) => (a < b ? -1 : 1))) {
       const abs = join(target, rel)
       if (!isFile(abs)) {
         fail('vendored-missing', `${rel} is the template's${of}, and it is missing`,
-          'move the change into harness-template, or restore it with bb-harness sync (node <harness-template checkout>/bin/bb-harness.mjs sync)')
+          'move the change into harness-template, or restore it with infrared-harness sync (node <harness-template checkout>/bin/infrared-harness.mjs sync)')
       } else if (typeof want !== 'string' || !/^sha256-[0-9a-f]{64}$/.test(want)) {
         fail('template-stamp-invalid', `template.files says ${JSON.stringify(want)} for ${rel}, which is not sha256-<hex>`,
-          'restore it with bb-harness sync --adopt (node <harness-template checkout>/bin/bb-harness.mjs sync --adopt)')
+          'restore it with infrared-harness sync --adopt (node <harness-template checkout>/bin/infrared-harness.mjs sync --adopt)')
       } else if (digest(readFileSync(abs)) !== want) {
         fail('vendored-modified', `${rel} is the template's${of}, and it was edited here`,
-          'move the change into harness-template, or restore it with bb-harness sync --force (node <harness-template checkout>/bin/bb-harness.mjs sync --force)')
+          'move the change into harness-template, or restore it with infrared-harness sync --force (node <harness-template checkout>/bin/infrared-harness.mjs sync --force)')
       }
     }
   }
@@ -1080,7 +1156,7 @@ try {
     case 'validate': cmdValidate(); break
     case 'tailored': cmdTailored(); break
     default:
-      out('bb-harness <init|sync|path|validate|tailored|vcr> [--target DIR] [--json]')
+      out('infrared-harness <init|sync|path|validate|tailored|vcr> [--target DIR] [--json]')
       process.exitCode = cmd ? 2 : 0
   }
 } catch (error) {
@@ -1091,7 +1167,7 @@ try {
     // failures, so an I/O error that reaches here came before any write:
     // reading the template or the repository. One line and exit 2: an uncaught
     // throw would exit 1, which from these two means "refused".
-    process.stderr.write(`bb-harness: could not ${error.syscall}${error.path ? ` ${shown(String(error.path))}` : ''} ` +
+    process.stderr.write(`infrared-harness: could not ${error.syscall}${error.path ? ` ${shown(String(error.path))}` : ''} ` +
       `(${because(error)}): nothing was written\n`)
     process.exitCode = 2
   } else {

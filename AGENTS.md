@@ -8,7 +8,7 @@ the workspace's `CLAUDE.md` one directory up; this file is the map.
 ## Where things are
 
 Paths are declared once, in `.infrared/harness.json`. Resolve one rather than
-typing it: `node .infrared/bin/bb-harness.mjs path <key>`.
+typing it: `node .infrared/bin/infrared-harness.mjs path <key>`.
 
 | Key | What it holds | When you read it |
 |-----|---------------|------------------|

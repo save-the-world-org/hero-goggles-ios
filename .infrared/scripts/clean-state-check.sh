@@ -9,7 +9,7 @@
 set -uo pipefail
 HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ROOT="$(dirname "$HARNESS")"; cd "$ROOT" || exit 2
-CLI="$HARNESS/bin/bb-harness.mjs"
+CLI="$HARNESS/bin/infrared-harness.mjs"
 # The harness directory, by the name it was found under, is left out of the
 # debug check: its notes are the record, not this work's debris.
 EXCLUDE=":(exclude)$(basename "$HARNESS")"
@@ -58,8 +58,9 @@ step "verify passes"            '[ -n "$VERIFY" ] && eval "$VERIFY"'
 # dies of SIGPIPE, and under pipefail the negated pipeline read as clean.
 if [ -z "$nogit" ]; then step "no debug artifacts" '[ -z "$(debug_artifacts 2>/dev/null)" ]'
 else skip "no debug artifacts" "$nogit"; fi
-# The repo's own copy, beside this script: nothing puts `bb-harness` on PATH in
-# a scaffolded repo. If it is not there, node fails and so does this line.
+# The repo's own copy, beside this script: nothing puts `infrared-harness` on
+# PATH in a scaffolded repo. If it is not there, node fails and so does this
+# line.
 step "harness validates"        'node "$CLI" validate'
 case "$progress" in
   0) step "progress appended today" "grep -q \"$(date +%Y-%m-%d)\" \"$PROGRESS\"" ;;

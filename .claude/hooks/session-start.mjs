@@ -15,16 +15,16 @@
  * one directory whose name starts with a dot that holds a harness manifest.
  * Two of them, and it says so and reads neither. Paths come from the manifest
  * through the CLI's `path <key>`, the same way CI and scripts find them; the
- * CLI is the manifest's `paths.cli`, or bin/bb-harness.mjs in the harness
- * directory. It also says how the repository delivers its work, which is the
- * mode the guard enforces: the one committed at origin/HEAD (committedDelivery()
- * in guard.mjs), with a line more when the working tree says otherwise. And
- * which template version the harness came from. Every manifest key it shows
- * is optional: an absent one drops its line.
+ * CLI is the manifest's `paths.cli`, or bin/infrared-harness.mjs in the
+ * harness directory. It also says how the repository delivers its work, which
+ * is the mode the guard enforces: the one committed at origin/HEAD
+ * (committedDelivery() in guard.mjs), with a line more when the working tree
+ * says otherwise. And which template version the harness came from. Every
+ * manifest key it shows is optional: an absent one drops its line.
  *
  * Quiet by design: in a repository without the harness it prints nothing, and
- * any failure prints nothing and exits 0. Set BB_HARNESS_ORIENT=0 to turn it
- * off (for a runner whose prompt already says what to read).
+ * any failure prints nothing and exits 0. Set INFRARED_HARNESS_ORIENT=0 to
+ * turn it off (for a runner whose prompt already says what to read).
  *
  * Zero dependencies, Node 22 or newer. Host globals are imported, not assumed.
  */
@@ -350,7 +350,7 @@ function agentsLoaded(root, instructions) {
 const HEAD = 'Harness orientation, from .claude/hooks/session-start.mjs: the newest state only, capped at 6 KB. The files are the record; open them for more.'
 
 async function orient(start) {
-  if (process.env.BB_HARNESS_ORIENT === '0') return ''
+  if (process.env.INFRARED_HARNESS_ORIENT === '0') return ''
   // Found by the rule the guard enforces with, so the two never disagree.
   const { committedDelivery, deliveryOf, harnessesIn, GIT_ENV } = await import('./guard.mjs')
   const root = rootOf(start, GIT_ENV)
@@ -360,7 +360,7 @@ async function orient(start) {
 
   const { dir, manifest } = found[0]
   const declared = manifest.paths !== null && typeof manifest.paths === 'object' ? manifest.paths : {}
-  const cli = typeof declared.cli === 'string' && declared.cli.trim() !== '' ? declared.cli : `${dir}/bin/bb-harness.mjs`
+  const cli = typeof declared.cli === 'string' && declared.cli.trim() !== '' ? declared.cli : `${dir}/bin/infrared-harness.mjs`
   const hasCli = existsSync(resolve(root, cli))
   const keys = ['instructions', 'mission', 'decisions', 'progress', 'features', 'goldenRules', 'knowledge']
   const p = hasCli ? Object.fromEntries(await Promise.all(keys.map(async (k) => [k, await pathOf(root, cli, k)]))) : {}

@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-node .infrared/bin/bb-harness.mjs validate
+node .infrared/bin/infrared-harness.mjs validate
 shellcheck scripts/*
 xcodegen generate --quiet
 derived=.build/verify

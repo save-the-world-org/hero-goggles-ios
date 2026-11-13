@@ -59,8 +59,8 @@ const KEY_FIX = {
 }
 
 /**
- * The manifest, found the way bb-harness finds it: in the one top-level entry
- * whose name starts with a dot (never .git), that is a directory, and that
+ * The manifest, found the way infrared-harness finds it: in the one top-level
+ * entry whose name starts with a dot (never .git), that is a directory, and that
  * holds a harness.json parsing to an object with a numeric `harness`. This
  * ships alone and imports nothing, so the rule is written here too; the CLI's
  * findHarness() is the one to keep it in step with.
@@ -179,7 +179,7 @@ async function askGitHub(token) {
     const res = await globalThis.fetch('https://api.github.com/rate_limit', {
       headers: {
         authorization: `Bearer ${token}`,
-        'user-agent': 'bb-harness-credentials',
+        'user-agent': 'infrared-harness-credentials',
         'x-github-api-version': '2022-11-28',
       },
     })
